@@ -39,7 +39,7 @@ class Skill:
         self.skill_vampiric_ratio = 0
 
         # === control class ===
-        self.skill_stun = 0
+        # self.skill_stun_rounds = 0
 
         # decrease target attack
         # self.skill_weaken = 0, 0

@@ -1,9 +1,10 @@
 
 from actor import Actor
 import config
+import heapq
 
 class CombatSimulator:
-    def __init__(self, actors : list[Actor], total_rounds = config.TOTAL_ROUNDS):
+    def __init__(self, actors : heapq[Actor], total_rounds = config.TOTAL_ROUNDS):
         self.actors = actors
         self.remaining_rounds = total_rounds
 
@@ -13,3 +14,5 @@ class CombatSimulator:
                 actor.move()
 
             self.remaining_rounds -= 1
+
+            

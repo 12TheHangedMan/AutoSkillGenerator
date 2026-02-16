@@ -1,0 +1,52 @@
+{
+    "attack_range": {
+        "min": 0,
+        "max": 100,
+        "step": 10
+    },
+    "cost_range": {
+        "min": 0,
+        "max": 400,
+        "step": 10
+    },
+    "fatigue_range": {
+        "min": 0,
+        "max": 400,
+        "step": 10
+    },
+    "ignore_defence": {
+        "min": 0,
+        "max": 100,
+        "step": 1
+    },
+    "damage_reduction_ratio": {
+        "min": 0,
+        "max": 100,
+        "step": 1
+    },
+    "damage_reduction_flat": {
+        "min": 0,
+        "max": 100,
+        "step": 10
+    },
+   "skill_critical_chance" : {
+        "min": 0,
+        "max": 100,
+        "step": 1
+   },
+   "skill_critical_multiplication": {
+        "min": 0,
+        "max": 100,
+        "step": 1
+   },
+   "skill_healing": {
+        "min": 0,
+        "max": 100,
+        "step": 10
+   },
+   "skill_vampiric_ratio": {
+        "min": 0,
+        "max": 100,
+        "step": 1
+   }
+}
