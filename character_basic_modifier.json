@@ -1,0 +1,9 @@
+{
+    "base_attack": 100,
+    "base_hit_rate": 75,
+    "base_critical_rate": 25,
+    "base_critical_multiplier": 25,
+    "base_defense": 100,
+    "base_dodge": 25,
+    "base_anti_critical": 75
+}

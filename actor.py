@@ -1,15 +1,19 @@
-from skill import Skill
+from skill_builder import generate_skill
+import json
+
+with open("character_basic_modifier.json", "r") as file:
+    BASE_CHARACTER_STATUS = json.load(file)
+
 
 class Actor:
-    def __init__(self, id, skeleton, constrains, skills:list[Skill]):
-        self.skeleton = skeleton
-        self.constrains = constrains
-        self.skills = skills
+    def __init__(self, id=0):
+        self.skill = generate_skill()
         self.id = id
 
-    def move(self, target):
-        pass
+        self.character_status = BASE_CHARACTER_STATUS.copy()
 
-    def log(self):
-        pass
-
+    def get_character_status(self):
+        return self.character_status
+    
+    def get_character_skill(self):
+        return self.skill
