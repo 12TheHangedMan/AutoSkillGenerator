@@ -1,38 +1,19 @@
 TOTAL_ROUNDS = 1000
 SEED = 42
+TOTAL_SLOTS = 8
 
-ATTACK_RANGE ={
-    "min": 0,
-    "max": 100,
-    "step": 10
+# game design parameters
+TOTAL_TIERS = 4
+
+MIN_TYPE_COUNTS = {
+    "damage_range": 1
 }
 
-COST_RANGE = {
-    "min": 0,
-    "max": 100,
-    "step": 10
+MAX_TYPE_COUNTS = {
+    "damage_range": 5
 }
 
-FATIGUE_RANGE = {
-    "min": 0,
-    "max": 100,
-    "step": 10
-}
+MIN_NON_DAMAGE_COUNT = 1
+MAX_NON_DAMAGE_COUNT = 5
 
-IGNORE_DEFENCE = {
-    "min": 0,
-    "max": 100,
-    "step": 1
-}
-
-DAMAGE_REDUCTION_RATIO = {
-    "min": 0,
-    "max": 100,
-    "step": 1
-}
-
-DAMAGE_REDUCTION_FLAT = {
-    "min": 0,
-    "max": 100,
-    "step": 10
-}
+REQUIRED_ENTRY_TYPES = ["cost_range", "fatigue_range"]
