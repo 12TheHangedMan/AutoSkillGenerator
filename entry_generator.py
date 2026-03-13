@@ -10,7 +10,7 @@ def load_modifier_space(path="skill_modifier_space.json"):
         return json.load(f)
 
 
-def generate_entry(modifier_space, entry_type=None, tier=None, slot_id=0):
+def generate_entry(modifier_space, entry_type=None, tier=None):
     if entry_type is None:
         entry_type = random.choice(list(modifier_space.keys()))
 
@@ -27,38 +27,32 @@ def generate_entry(modifier_space, entry_type=None, tier=None, slot_id=0):
     return Entry(
         entry_type=entry_type,
         tier=tier,
-        value=int(value),
-        slot_id=slot_id
+        value=int(value)
     )
 
 
 def generate_entries(modifier_space, total_slots):
     entries = []
-    slot_id = 0
 
-    # fill cost and fatigue
+    # 1. fill required entries: cost and fatigue
     for entry_type in config.REQUIRED_ENTRY_TYPES:
         entries.append(
             generate_entry(
                 modifier_space=modifier_space,
-                entry_type=entry_type,
-                slot_id=slot_id
+                entry_type=entry_type
             )
         )
-        slot_id += 1
 
-    # fill the min active modifiers
+    # 2. fill minimum damage entries
     for _ in range(config.MIN_TYPE_COUNTS.get("damage_range", 0)):
         entries.append(
             generate_entry(
                 modifier_space=modifier_space,
-                entry_type="damage_range",
-                slot_id=slot_id
+                entry_type="damage_range"
             )
         )
-        slot_id += 1
 
-    # fill the passive modifiers
+    # 3. fill minimum passive / non-damage entries
     optional_non_damage_types = [
         k for k in modifier_space.keys()
         if k not in ["damage_range", "cost_range", "fatigue_range"]
@@ -69,13 +63,11 @@ def generate_entries(modifier_space, total_slots):
         entries.append(
             generate_entry(
                 modifier_space=modifier_space,
-                entry_type=entry_type,
-                slot_id=slot_id
+                entry_type=entry_type
             )
         )
-        slot_id += 1
 
-    # fill the rest slots
+    # 4. fill the rest of the slots
     optional_types = [
         k for k in modifier_space.keys()
         if k not in config.REQUIRED_ENTRY_TYPES
@@ -88,10 +80,8 @@ def generate_entries(modifier_space, total_slots):
         entries.append(
             generate_entry(
                 modifier_space=modifier_space,
-                entry_type=entry_type,
-                slot_id=slot_id
+                entry_type=entry_type
             )
         )
-        slot_id += 1
 
     return entries
