@@ -1,13 +1,11 @@
 from combat_simulator import CombatSimulator
 # from actor import Actor
 from utility import *
-import config
 import time
 from skill_builder import generate_skill
 
 
 def main():
-    total_slots = config.TOTAL_SLOTS
     skill = generate_skill()
     start_time = time.perf_counter()
 
