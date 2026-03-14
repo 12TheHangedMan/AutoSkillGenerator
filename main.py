@@ -8,7 +8,7 @@ from skill_builder import generate_skill
 
 def main():
     total_slots = config.TOTAL_SLOTS
-    skill = generate_skill(total_slots)
+    skill = generate_skill()
     start_time = time.perf_counter()
 
     print("Archetype ID:", skill.archetype_id)

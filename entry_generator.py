@@ -3,6 +3,7 @@ from models import Entry
 from utility import generate_levels, split_into_tiers
 import config
 
+
 def generate_entry(modifier_space, entry_type=None, tier=None):
     if entry_type is None:
         entry_type = random.choice(list(modifier_space.keys()))
@@ -24,52 +25,10 @@ def generate_entry(modifier_space, entry_type=None, tier=None):
     )
 
 
-def generate_entries(modifier_space, total_slots):
+def generate_entries(modifier_space, skeleton):
     entries = []
 
-    # 1. fill required entries: cost and fatigue
-    for entry_type in config.REQUIRED_ENTRY_TYPES:
-        entries.append(
-            generate_entry(
-                modifier_space=modifier_space,
-                entry_type=entry_type
-            )
-        )
-
-    # 2. fill minimum damage entries
-    for _ in range(config.MIN_TYPE_COUNTS.get("damage_range", 0)):
-        entries.append(
-            generate_entry(
-                modifier_space=modifier_space,
-                entry_type="damage_range"
-            )
-        )
-
-    # 3. fill minimum passive / non-damage entries
-    optional_non_damage_types = [
-        k for k in modifier_space.keys()
-        if k not in ["damage_range", "cost_range", "fatigue_range"]
-    ]
-
-    for _ in range(config.MIN_NON_DAMAGE_COUNT):
-        entry_type = random.choice(optional_non_damage_types)
-        entries.append(
-            generate_entry(
-                modifier_space=modifier_space,
-                entry_type=entry_type
-            )
-        )
-
-    # 4. fill the rest of the slots
-    optional_types = [
-        k for k in modifier_space.keys()
-        if k not in config.REQUIRED_ENTRY_TYPES
-    ]
-
-    remaining_slots = total_slots - len(entries)
-
-    for _ in range(remaining_slots):
-        entry_type = random.choice(optional_types)
+    for entry_type in skeleton:
         entries.append(
             generate_entry(
                 modifier_space=modifier_space,
