@@ -1,10 +1,10 @@
-
 from actor import Actor
 import utility
 import config
 
+
 class CombatSimulator:
-    def __init__(self, total_rounds = config.TOTAL_ROUNDS):
+    def __init__(self, total_rounds=config.TOTAL_ROUNDS):
         self.remaining_rounds = total_rounds
         self.dummy = Actor()
         self.test_unit = Actor()
@@ -12,13 +12,13 @@ class CombatSimulator:
         self.dmg_taken = 0
 
     def simulate_combat(self):
-        while(self.remaining_rounds > 0):
+        while self.remaining_rounds > 0:
             self.dmg_made += self.dmg_calculation(self.test_unit, self.dummy)
             self.dmg_taken += self.dmg_calculation(self.dummy, self.test_unit)
 
             self.remaining_rounds -= 1
 
-    def dmg_calculation(self, attacker : Actor, target : Actor):
+    def dmg_calculation(self, attacker: Actor, target: Actor):
         attacker_status = attacker.get_character_status()
         target_status = target.get_character_status()
 
@@ -65,9 +65,11 @@ class CombatSimulator:
 
         return expected_damage
 
-cs = CombatSimulator()
-attacker = Actor()
-target = Actor()
-cs.dmg_calculation(attacker, target)
+    def report_dmg(self):
+        print(f"total dmg made: {self.dmg_made}")
+        print(f"total dmg taken: {self.dmg_taken}")
 
-            
+
+cs = CombatSimulator()
+cs.simulate_combat()
+cs.report_dmg()
