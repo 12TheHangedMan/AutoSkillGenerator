@@ -1,14 +1,7 @@
-import json
 import random
 from models import Entry
 from utility import generate_levels, split_into_tiers
 import config
-
-
-def load_modifier_space(path="skill_modifier_space.json"):
-    with open(path, "r") as f:
-        return json.load(f)
-
 
 def generate_entry(modifier_space, entry_type=None, tier=None):
     if entry_type is None:

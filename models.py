@@ -12,7 +12,9 @@ class Entry:
 
 @dataclass(frozen=True)
 class Skill:
+    skill_id: int
     entries: List[Entry]
+
     archetype_id: str = field(init=False)
     aggregated_params: Dict[str, int] = field(init=False)
 
@@ -22,7 +24,8 @@ class Skill:
 
     def _aggregate_entries(self) -> Dict[str, int]:
         """
-        Aggregate all entry values into a single parameter dictionary.
+        Aggregate all entry values into one parameter dictionary.
+
         Example:
             damage_range -> damage
             cost_range -> cost
@@ -38,9 +41,12 @@ class Skill:
 
     def _build_archetype_signature(self) -> str:
         """
-        Build a stable structure signature using only (entry_type, tier).
-        Value differences within the same tier do NOT change archetype.
-        Order of entries does NOT matter.
+        Build a stable structure signature based only on:
+            (entry_type, tier)
+
+        Notes:
+        - value does NOT affect archetype identity
+        - entry order does NOT affect archetype identity
         """
         signature_parts = [
             f"{entry.entry_type}:{entry.tier}"
@@ -58,6 +64,7 @@ class Skill:
 
     def to_dict(self) -> dict:
         return {
+            "skill_id": self.skill_id,
             "archetype_id": self.archetype_id,
             "entries": [
                 {

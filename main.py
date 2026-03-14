@@ -1,5 +1,5 @@
 from combat_simulator import CombatSimulator
-from actor import Actor
+# from actor import Actor
 from utility import *
 import config
 import time
@@ -20,6 +20,9 @@ def main():
     print(skill.archetype_id)
     print(skill.aggregated_params)
 
+    cs = CombatSimulator()
+    cs.simulate_combat()
+    cs.report_dmg()
 
     end_time = time.perf_counter()
     print(f"Total time: {end_time - start_time:.6f} seconds")
