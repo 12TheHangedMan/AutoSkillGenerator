@@ -31,8 +31,7 @@ def generate_skill_skeleton(modifier_space: dict, skeleton_constraints: dict) ->
         if counts.get(entry_type, 0) >= rule["max"]:
             candidate_entry_types.discard(entry_type)
 
-    if len(skeleton) > total_slots:
-        raise ValueError("Minimum constraints exceed total_slots.")
+
 
     # fill remaining slots
     remaining_slots = total_slots - len(skeleton)

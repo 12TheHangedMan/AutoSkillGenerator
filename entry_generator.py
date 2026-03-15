@@ -4,6 +4,7 @@ from utility import generate_levels, split_into_tiers
 import config
 
 
+# gene generator
 def generate_entry(modifier_space, entry_type=None, tier=None):
     if entry_type is None:
         entry_type = random.choice(list(modifier_space.keys()))
@@ -32,7 +33,7 @@ def generate_entries(modifier_space, skeleton):
         entries.append(
             generate_entry(
                 modifier_space=modifier_space,
-                entry_type=entry_type
+                entry_type=entry_type,
             )
         )
 

@@ -1,5 +1,4 @@
-from actor import Actor, load_charater_base_modifier
-from skill_builder import generate_skill, load_modifier_space, load_skeleton_constraints
+from actor import Actor
 import utility
 import config
 
@@ -44,7 +43,7 @@ class CombatSimulator:
         target_dodge = target_status.get("base_dodge", 0)
         target_anti_crit = target_status.get("base_anti_critical", 0)
 
-        skill_damage = skill_params.get("damage", 0)
+        skill_damage = skill_params.get("skill_damage", 0)
         skill_hit = skill_params.get("skill_hit_rate", 0)
         skill_crit = skill_params.get("skill_critical_chance", 0)
         skill_crit_mult = skill_params.get("skill_critical_multiplication", 0)
@@ -79,7 +78,7 @@ class CombatSimulator:
         skill = attacker.get_character_skill()
         skill_params = skill.aggregated_params
 
-        raw_cost = skill_params.get("cost", 0)
+        raw_cost = skill_params.get("skill_cost", 0)
         reduction_ratio = skill_params.get("skill_cost_reduction_ratio", 0)
 
         reduction_ratio = max(0, min(reduction_ratio, 100))
@@ -91,7 +90,7 @@ class CombatSimulator:
         skill = attacker.get_character_skill()
         skill_params = skill.aggregated_params
 
-        raw_fatigue = skill_params.get("fatigue", 0)
+        raw_fatigue = skill_params.get("skill_fatigue", 0)
         reduction_ratio = skill_params.get("skill_fatigue_reduction_ratio", 0)
 
         reduction_ratio = max(0, min(reduction_ratio, 100))
@@ -108,6 +107,7 @@ class CombatSimulator:
         print(f"avg cost per round: {self.total_cost / self.total_rounds}")
         print(f"avg fatigue per round: {self.total_fatigue / self.total_rounds}")
         print(f"{self.attacker.get_character_skill().get_params()}")
+        print(f"{self.attacker.get_character_skill().get_entries()}")
 
 
 # cs = CombatSimulator()

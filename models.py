@@ -34,8 +34,7 @@ class Skill:
         result: Dict[str, int] = {}
 
         for entry in self.entries:
-            clean_key = entry.entry_type.replace("_range", "")
-            result[clean_key] = result.get(clean_key, 0) + entry.value
+            result[entry.entry_type] = result.get(entry.entry_type, 0) + entry.value
 
         return result
 
@@ -61,6 +60,9 @@ class Skill:
     
     def get_params(self) -> dict:
         return dict(self.aggregated_params)
+    
+    def get_entries(self) -> list:
+        return self.entries
 
     def to_dict(self) -> dict:
         return {
