@@ -1,4 +1,5 @@
 import numpy as np
+import json
 
 
 # generate float levels
@@ -66,3 +67,11 @@ def split_into_tiers(levels, total_tiers):
         start = end
 
     return tiers
+
+
+def load_json(path):
+    try:
+        with open(path, "r", encoding="utf-8") as file:
+            return json.load(file)
+    except FileNotFoundError:
+        raise FileNotFoundError(f"JSON file not found: {path}")

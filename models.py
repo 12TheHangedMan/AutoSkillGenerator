@@ -48,10 +48,7 @@ class Skill:
         - value does NOT affect archetype identity
         - entry order does NOT affect archetype identity
         """
-        signature_parts = [
-            f"{entry.entry_type}:{entry.tier}"
-            for entry in self.entries
-        ]
+        signature_parts = [f"{entry.entry_type}:{entry.tier}" for entry in self.entries]
         signature_parts.sort()
         return "|".join(signature_parts)
 
@@ -61,18 +58,17 @@ class Skill:
 
     def get_param(self, key: str, default: int = 0) -> int:
         return self.aggregated_params.get(key, default)
+    
+    def get_params(self) -> dict:
+        return dict(self.aggregated_params)
 
     def to_dict(self) -> dict:
         return {
             "skill_id": self.skill_id,
             "archetype_id": self.archetype_id,
             "entries": [
-                {
-                    "entry_type": e.entry_type,
-                    "tier": e.tier,
-                    "value": e.value
-                }
+                {"entry_type": e.entry_type, "tier": e.tier, "value": e.value}
                 for e in self.entries
             ],
-            "aggregated_params": dict(self.aggregated_params)
+            "aggregated_params": dict(self.aggregated_params),
         }
