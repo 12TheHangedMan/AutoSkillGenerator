@@ -5,15 +5,11 @@ import random
 
 
 def generate_pure_random_skill(
-    modifier_space: dict,
-    skeleton_constraints: dict,
-    skill_builder: SkillBuilder
+    modifier_space: dict, skeleton_constraints: dict, skill_builder: SkillBuilder
 ):
     min_skeleton = skill_builder.generate_min_skeleton()
     extended_skeleton = extend_skeleton(
-        modifier_space,
-        skeleton_constraints,
-        min_skeleton
+        modifier_space, skeleton_constraints, min_skeleton
     )
     entries = fill_skeleton(modifier_space, extended_skeleton)
 
@@ -21,9 +17,7 @@ def generate_pure_random_skill(
 
 
 def extend_skeleton(
-    modifier_space: dict,
-    skeleton_constraints: dict,
-    min_skeleton: list[str]
+    modifier_space: dict, skeleton_constraints: dict, min_skeleton: list[str]
 ) -> list[str]:
     total_slots = skeleton_constraints["total_slots"]
     constraints = skeleton_constraints["constraints"]
@@ -48,8 +42,7 @@ def extend_skeleton(
             raise ValueError("No candidate entry types available.")
 
         chosen = random.choice(list(candidate_entry_types))
-
-        extended_skeleton.append(chosen)
+        append_skeleton(extended_skeleton, chosen)
         counts[chosen] = counts.get(chosen, 0) + 1
         remaining_slots -= 1
 
@@ -57,6 +50,12 @@ def extend_skeleton(
             candidate_entry_types.discard(chosen)
 
     return extended_skeleton
+
+
+def append_skeleton(skeleton: list[str], new_entry_type: str):
+    if skeleton is None or len(skeleton) == 0:
+        raise ValueError("Empty list")
+    skeleton.append(new_entry_type)
 
 
 def fill_skeleton(modifier_space: dict, skeleton: list[str]) -> list[Entry]:

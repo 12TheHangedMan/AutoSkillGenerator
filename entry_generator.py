@@ -34,3 +34,7 @@ def generate_entries(modifier_space: dict, skeleton: list[str]) -> list[Entry]:
         )
 
     return entries
+
+
+def append_entries(entries: list[Entry], new_entry: Entry):
+    return entries.append(new_entry)
