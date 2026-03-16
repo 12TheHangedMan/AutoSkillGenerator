@@ -34,8 +34,7 @@ class Skill:
         result: Dict[str, int] = {}
 
         for entry in self.entries:
-            clean_key = entry.entry_type.replace("_range", "")
-            result[clean_key] = result.get(clean_key, 0) + entry.value
+            result[entry.entry_type] = result.get(entry.entry_type, 0) + entry.value
 
         return result
 
@@ -48,10 +47,7 @@ class Skill:
         - value does NOT affect archetype identity
         - entry order does NOT affect archetype identity
         """
-        signature_parts = [
-            f"{entry.entry_type}:{entry.tier}"
-            for entry in self.entries
-        ]
+        signature_parts = [f"{entry.entry_type}:{entry.tier}" for entry in self.entries]
         signature_parts.sort()
         return "|".join(signature_parts)
 
@@ -61,18 +57,20 @@ class Skill:
 
     def get_param(self, key: str, default: int = 0) -> int:
         return self.aggregated_params.get(key, default)
+    
+    def get_params(self) -> dict:
+        return dict(self.aggregated_params)
+    
+    def get_entries(self) -> list:
+        return self.entries
 
     def to_dict(self) -> dict:
         return {
             "skill_id": self.skill_id,
             "archetype_id": self.archetype_id,
             "entries": [
-                {
-                    "entry_type": e.entry_type,
-                    "tier": e.tier,
-                    "value": e.value
-                }
+                {"entry_type": e.entry_type, "tier": e.tier, "value": e.value}
                 for e in self.entries
             ],
-            "aggregated_params": dict(self.aggregated_params)
+            "aggregated_params": dict(self.aggregated_params),
         }

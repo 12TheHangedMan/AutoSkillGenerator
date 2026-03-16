@@ -1,0 +1,10 @@
+{
+  "total_slots": 8,
+  "constraints": {
+    "skill_cost": {"min": 1, "max": 1},
+    "skill_fatigue": {"min": 1, "max": 1},
+    "skill_damage": {"min": 2, "max": 5},
+    "skill_fatigue_reduction_ratio": {"min": 0, "max": 1},
+    "skill_cost_reduction_ratio": {"min": 0, "max": 1}
+  }
+}

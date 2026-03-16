@@ -1,52 +1,52 @@
 {
-     "cost_range": {
-        "min": 0,
-        "max": 400,
-        "step": 1
-    },
-    "fatigue_range": {
-        "min": 0,
-        "max": 400,
-        "step": 1
-    },
-    "damage_range": {
-        "min": 0,
-        "max": 100,
-        "step": 1
-    },
-    "ignore_defence": {
-        "min": 0,
-        "max": 100,
-        "step": 1
-    },
-   "skill_critical_chance" : {
-        "min": 0,
-        "max": 100,
-        "step": 1
-   },
-   "skill_critical_multiplication": {
-        "min": 0,
-        "max": 100,
-        "step": 1
-   },
-   "skill_hit_rate": {
-        "min": 0,
-        "max": 100,
-        "step": 1
-   },
-   "skill_attack_multiplication": {
-        "min": 0,
-        "max": 100,
-        "step": 1
-   },
-   "skill_cost_reduction_ratio": {
-        "min": 0,
-        "max": 100,
-        "step": 1
-   },
-   "skill_fatigue_reduction_ratio": {
-        "min": 0,
-        "max": 100,
-        "step": 1
-   }
+     "skill_cost": {
+          "min": 0,
+          "max": 400,
+          "step": 1
+     },
+     "skill_fatigue": {
+          "min": 0,
+          "max": 400,
+          "step": 1
+     },
+     "skill_damage": {
+          "min": 0,
+          "max": 100,
+          "step": 1
+     },
+     "skill_ignore_defence": {
+          "min": 0,
+          "max": 100,
+          "step": 1
+     },
+     "skill_critical_chance": {
+          "min": 0,
+          "max": 100,
+          "step": 1
+     },
+     "skill_critical_multiplication": {
+          "min": 0,
+          "max": 100,
+          "step": 1
+     },
+     "skill_hit_rate": {
+          "min": 0,
+          "max": 100,
+          "step": 1
+     },
+     "skill_attack_multiplication": {
+          "min": 0,
+          "max": 100,
+          "step": 1
+     },
+     "skill_cost_reduction_ratio": {
+          "min": 0,
+          "max": 100,
+          "step": 1
+     },
+     "skill_fatigue_reduction_ratio": {
+          "min": 0,
+          "max": 100,
+          "step": 1
+     }
 }

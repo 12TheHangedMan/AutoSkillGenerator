@@ -1,0 +1,10 @@
+{
+  "skill_id": 0,
+  "entries": [
+    {
+      "entry_type": "damage_range",
+      "tier": 4,
+      "value": 100
+    }
+  ]
+}
