@@ -36,7 +36,8 @@ class SkillBuilder:
         if len(skeleton) > total_slots:
             raise ValueError("Minimum constraints exceed total_slots.")
 
-        return skeleton
+        # sort min skeleton to ensure the essential entry types are in order (GA crossover)
+        return sorted(skeleton)
 
     def load_skill_from_dict(self, raw_skill_data: dict) -> Skill:
         entries = [
