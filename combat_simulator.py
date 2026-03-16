@@ -5,7 +5,7 @@ import config
 
 class CombatSimulator:
     def __init__(
-        self, attacker: Actor, target: Actor, total_rounds=config.TOTAL_ROUNDS
+        self, attacker: Actor, target: Actor, total_rounds:int=config.TOTAL_ROUNDS
     ):
         self.total_rounds = total_rounds
         self.remaining_rounds = total_rounds
@@ -76,7 +76,7 @@ class CombatSimulator:
 
     def cost_calculation(self, attacker: Actor) -> float:
         skill = attacker.get_character_skill()
-        skill_params = skill.aggregated_params
+        skill_params = skill.get_params()
 
         raw_cost = skill_params.get("skill_cost", 0)
         reduction_ratio = skill_params.get("skill_cost_reduction_ratio", 0)

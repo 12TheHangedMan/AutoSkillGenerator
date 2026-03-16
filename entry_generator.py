@@ -5,7 +5,7 @@ import config
 
 
 # gene generator
-def generate_entry(modifier_space, entry_type=None, tier=None):
+def generate_entry(modifier_space: dict, entry_type=None, tier=None) -> Entry:
     if entry_type is None:
         entry_type = random.choice(list(modifier_space.keys()))
 
@@ -19,14 +19,10 @@ def generate_entry(modifier_space, entry_type=None, tier=None):
     tier_values = tiers[tier - 1]
     value = random.choice(tier_values)
 
-    return Entry(
-        entry_type=entry_type,
-        tier=tier,
-        value=int(value)
-    )
+    return Entry(entry_type=entry_type, tier=tier, value=int(value))
 
 
-def generate_entries(modifier_space, skeleton):
+def generate_entries(modifier_space: dict, skeleton: list[str]) -> list[Entry]:
     entries = []
 
     for entry_type in skeleton:
