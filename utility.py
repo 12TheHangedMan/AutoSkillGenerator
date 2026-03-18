@@ -1,55 +1,44 @@
 import numpy as np
 import json
+from models import Entry
 
 
 # generate float levels
-def generate_float_levels(min_val, max_val, step):
-    return list(range(min_val, max_val + step, step))
+# def generate_float_levels(min_val, max_val, step):
+#     return list(range(min_val, max_val + step, step))
 
 
 # generate integer levels
-def generate_levels(min_val, max_val, step):
+def generate_levels(min_val: int, max_val: int, step: int) -> list[int]:
     return list(range(min_val, max_val + 1, step))
 
 
-def generate_groups(arr : np.ndarray, group_count: int):
-    return np.array_split(arr, group_count)
-
-
-# generate random integer value
-def generate_modifier(range: dict[str, int], tier: int):
-    return 0
+# def generate_groups(arr: np.ndarray, group_count: int):
+#     return np.array_split(arr, group_count)
 
 
 # damage calculation
-def damage_ratio_calculation(attack: float, defense: float):
-    total = attack + defense
-    if total <= 0.0:
-        return 0.0
-    return attack / total
+def calculate_damage_ratio(attack: float, defense: float) -> float:
+    return base_ratio_calculation(attack, defense)
 
 
-def hit_ratio_calculation(hit_rate, dodge_rate):
-    total = hit_rate + dodge_rate
-    if total <= 0.0:
-        return 0.0
-    return hit_rate / total
+def calculate_hit_ratio(hit_rate, dodge_rate) -> float:
+    return base_ratio_calculation(hit_rate, dodge_rate)
 
 
-def critical_ratio_calculation(critical_rate, anti_critical):
-    total = critical_rate + anti_critical
-    if total <= 0.0:
-        return 0.0
-    return critical_rate / total
+def calculate_critical_ratio(critical_rate, anti_critical) -> float:
+    return base_ratio_calculation(critical_rate, anti_critical)
 
 
-def damage_output(raw_damage, damage_ratio, critical_multiplier):
-    final_damage = raw_damage * damage_ratio * (1 + critical_multiplier / 100)
-    return final_damage
+def base_ratio_calculation(a: int, b: int) -> float:
+    if a < 0 or b < 0:
+        raise ValueError("Input values can't be negative.")
+    return a / (a + b + 1e-6)
 
 
-def generate_skill_id() -> str:
-    return "0"
+# def damage_output(raw_damage, damage_ratio, critical_multiplier):
+#     final_damage = raw_damage * damage_ratio * (1 + critical_multiplier / 100)
+#     return final_damage
 
 
 def split_into_tiers(levels, total_tiers):

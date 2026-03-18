@@ -1,5 +1,4 @@
 from models import Skill, Entry
-from utility import load_json
 import config
 
 
@@ -9,20 +8,24 @@ class SkillBuilder:
         self.skeleton_constraints = skeleton_constraints
         self.skill_id_counter = config.SKILL_ID_START
 
-    # skill id is for future extension when implying skill names, not a hard requirement in this experiment
+        self.min_skeleton = self._generate_min_skeleton()
+        self.min_skeleton_length = len(self.min_skeleton)
+
+    # skill id is designed for extension when implying skill names
     def new_skill_id(self) -> int:
         self.skill_id_counter += 1
         return self.skill_id_counter
 
     def build_skill(self, entries: list[Entry], skill_id=None) -> Skill:
+        # skill id can also be passed in for testing manually created skills
         if skill_id is None:
             skill_id = self.new_skill_id()
         return Skill(skill_id=skill_id, entries=entries)
 
     # generate the min skeleton based on the skill skeleton constraints
-    def generate_min_skeleton(self) -> list[str]:
+    def _generate_min_skeleton(self) -> list[str]:
         constraints: dict = self.skeleton_constraints["constraints"]
-        total_slots: int = self.skeleton_constraints["total_slots"]
+        max_slots: int = self.skeleton_constraints["max_slots"]
 
         skeleton = []
 
@@ -33,10 +36,10 @@ class SkillBuilder:
             for _ in range(min_count):
                 skeleton.append(entry_type)
 
-        if len(skeleton) > total_slots:
+        if len(skeleton) > max_slots:
             raise ValueError("Minimum constraints exceed total_slots.")
 
-        # sort min skeleton to ensure the essential entry types are in order (GA crossover)
+        # sort min skeleton to ensure the essential entry types are in order (for GA crossover)
         return sorted(skeleton)
 
     def load_skill_from_dict(self, raw_skill_data: dict) -> Skill:
@@ -52,3 +55,6 @@ class SkillBuilder:
         skill_id = raw_skill_data.get("skill_id")
 
         return self.build_skill(entries=entries, skill_id=skill_id)
+    
+    def get_min_skeleton(self) -> list[str]:
+        return self.min_skeleton

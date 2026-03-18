@@ -1,5 +1,4 @@
 from dataclasses import dataclass, field
-from typing import List, Dict
 import hashlib
 
 
@@ -13,30 +12,14 @@ class Entry:
 @dataclass(frozen=True)
 class Skill:
     skill_id: int
-    entries: List[Entry]
+    entries: list[Entry]
 
     archetype_id: str = field(init=False)
-    aggregated_params: Dict[str, int] = field(init=False)
+    aggregated_params: dict[str, int] = field(init=False)
 
     def __post_init__(self):
-        object.__setattr__(self, "aggregated_params", self._aggregate_entries())
+        object.__setattr__(self, "aggregated_params", aggregate_entries(self.entries))
         object.__setattr__(self, "archetype_id", self._build_archetype_id())
-
-    def _aggregate_entries(self) -> Dict[str, int]:
-        """
-        Aggregate all entry values into one parameter dictionary.
-
-        Example:
-            damage_range -> damage
-            cost_range -> cost
-            fatigue_range -> fatigue
-        """
-        result: Dict[str, int] = {}
-
-        for entry in self.entries:
-            result[entry.entry_type] = result.get(entry.entry_type, 0) + entry.value
-
-        return result
 
     def _build_archetype_signature(self) -> str:
         """
@@ -57,10 +40,10 @@ class Skill:
 
     def get_param(self, key: str, default: int = 0) -> int:
         return self.aggregated_params.get(key, default)
-    
+
     def get_params(self) -> dict:
         return dict(self.aggregated_params)
-    
+
     def get_entries(self) -> list:
         return self.entries
 
@@ -74,3 +57,14 @@ class Skill:
             ],
             "aggregated_params": dict(self.aggregated_params),
         }
+
+
+def aggregate_entries(entries: list[Entry]) -> dict[str, int]:
+    # Aggregate all entry values into one parameter dictionary.
+    result: dict[str, int] = {}
+
+    for entry in entries:
+        result[entry.entry_type] = result.get(entry.entry_type, 0) + entry.value
+
+    # result structure: {entry_type: sum of values}
+    return result

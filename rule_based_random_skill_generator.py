@@ -27,7 +27,7 @@ def generate_rule_based_random_skill(
     tier_mean: float,
     sigma: float = 0.8,
 ):
-    min_skeleton = skill_builder.generate_min_skeleton()
+    min_skeleton = skill_builder.get_min_skeleton()
     extended_skeleton = extend_skeleton(
         modifier_space, skeleton_constraints, min_skeleton
     )
