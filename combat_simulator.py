@@ -5,7 +5,7 @@ import config
 
 class CombatSimulator:
     def __init__(
-        self, attacker: Actor, target: Actor, total_rounds:int=config.TOTAL_ROUNDS
+        self, attacker: Actor, target: Actor, total_rounds: int = config.TOTAL_ROUNDS
     ):
         self.total_rounds = total_rounds
         self.remaining_rounds = total_rounds

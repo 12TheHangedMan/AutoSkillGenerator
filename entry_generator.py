@@ -9,15 +9,16 @@ def generate_entry(modifier_space: dict, entry_type=None, tier=None) -> Entry:
     if entry_type is None:
         entry_type = random.choice(list(modifier_space.keys()))
 
-    param = modifier_space[entry_type]
-    levels = generate_levels(param["min"], param["max"], param["step"])
-    tiers = split_into_tiers(levels, config.TOTAL_TIERS)
+    property = modifier_space[entry_type]
+    min, max, step = property["min"], property["max"], property["step"]
+    enrty_value_space: list = generate_levels(min, max, step)
+    tier_list = split_into_tiers(enrty_value_space, config.TOTAL_TIERS)
 
+    # default to random tier if not specified
     if tier is None:
         tier = random.randint(1, config.TOTAL_TIERS)
 
-    tier_values = tiers[tier - 1]
-    value = random.choice(tier_values)
+    value = random.choice(tier_list[tier - 1])
 
     return Entry(entry_type=entry_type, tier=tier, value=int(value))
 

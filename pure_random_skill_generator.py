@@ -7,7 +7,7 @@ import random
 def generate_pure_random_skill(
     modifier_space: dict, skeleton_constraints: dict, skill_builder: SkillBuilder
 ):
-    min_skeleton = skill_builder.generate_min_skeleton()
+    min_skeleton = skill_builder.get_min_skeleton()
     extended_skeleton = extend_skeleton(
         modifier_space, skeleton_constraints, min_skeleton
     )
@@ -19,7 +19,7 @@ def generate_pure_random_skill(
 def extend_skeleton(
     modifier_space: dict, skeleton_constraints: dict, min_skeleton: list[str]
 ) -> list[str]:
-    total_slots = skeleton_constraints["total_slots"]
+    max_slots = skeleton_constraints["max_slots"]
     constraints = skeleton_constraints["constraints"]
 
     candidate_entry_types = set(modifier_space.keys())
@@ -35,7 +35,7 @@ def extend_skeleton(
         if counts.get(entry_type, 0) >= rule["max"]:
             candidate_entry_types.discard(entry_type)
 
-    remaining_slots = total_slots - len(extended_skeleton)
+    remaining_slots = max_slots - len(extended_skeleton)
 
     while remaining_slots:
         if not candidate_entry_types:
