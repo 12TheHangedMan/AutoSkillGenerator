@@ -16,7 +16,7 @@ def generate_ga_skill(
     skill_builder: SkillBuilder,
     skill_simulator: SkillSimulator,
     target_skill: Skill,
-    population = list[list[Entry]],
+    population=list[list[Entry]],
     population_size: int = config.GA_POPULATION_SIZE,
     generations: int = config.GA_GENERATIONS,
     mutation_rate: float = config.GA_MUTATION_RATE,
@@ -114,7 +114,9 @@ def initialize_population(
     return population
 
 
-def evaluate_population(population: list[list[Entry]], skill_simulator, target_skill: Skill):
+def evaluate_population(
+    population: list[list[Entry]], skill_simulator, target_skill: Skill
+) -> list:
     scored_population = []
 
     for entries in population:
@@ -172,9 +174,8 @@ def crossover(
 
     if optional_len > 0:
         cut = random.randint(0, optional_len)
-        child_optional = (
-            copy.deepcopy(optional_entries_a[:cut]) +
-            copy.deepcopy(optional_entries_b[cut:])
+        child_optional = copy.deepcopy(optional_entries_a[:cut]) + copy.deepcopy(
+            optional_entries_b[cut:]
         )
         child_entries.extend(child_optional)
 
@@ -270,7 +271,9 @@ def repair_entries(
                 )
 
                 repaired[idx] = replacement
-                counts[replacement.entry_type] = counts.get(replacement.entry_type, 0) + 1
+                counts[replacement.entry_type] = (
+                    counts.get(replacement.entry_type, 0) + 1
+                )
 
     return repaired
 
