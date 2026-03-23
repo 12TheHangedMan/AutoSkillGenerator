@@ -16,8 +16,6 @@ class SkillSimulator:
 
     def simulate_skill(self, attacker_skill: Skill, target_skill: Skill) -> dict:
         result = self.simulate_with_entries(
-            attacker_status=self.attacker_status,
-            target_status=self.target_status,
             attacker_entries=attacker_skill.get_entries(),
             target_entries=target_skill.get_entries(),
         )
@@ -60,7 +58,7 @@ class SkillSimulator:
         skill_ignore_defense = aggregated_attacker_entries.get(
             "skill_ignore_defense", 0
         )
-        defense = max(0, target_defense - skill_ignore_defense)
+        defense = max(0, target_defense * (1 - skill_ignore_defense / 100))
 
         skill_damage = aggregated_attacker_entries.get("skill_damage", 0)
 
@@ -69,7 +67,6 @@ class SkillSimulator:
         crit_chance = utility.calculate_critical_ratio(
             critical_rate, target_anti_critical
         )
-
         crit_multiply_ratio = critical_multiplier / 100
 
         expected_damage = (
@@ -101,8 +98,6 @@ class SkillSimulator:
 
     def simulate_with_entries(
         self,
-        attacker_status: dict,
-        target_status: dict,
         attacker_entries: list,
         target_entries: list,
         total_rounds: int = -1,
@@ -120,14 +115,14 @@ class SkillSimulator:
 
         for _ in range(total_rounds):
             dmg_made += self.calculate_dmg(
-                attacker_status=attacker_status,
-                target_status=target_status,
+                attacker_status=self.attacker_status,
+                target_status=self.target_status,
                 aggregated_attacker_entries=aggregated_attacker_entries,
             )
 
             dmg_taken += self.calculate_dmg(
-                attacker_status=target_status,
-                target_status=attacker_status,
+                attacker_status=self.target_status,
+                target_status=self.attacker_status,
                 aggregated_attacker_entries=aggregated_target_entries,
             )
 
