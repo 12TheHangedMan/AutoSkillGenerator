@@ -6,10 +6,8 @@ from models import Entry, Skill
 from skill_builder import SkillBuilder
 from skill_simulator import SkillSimulator
 from entry_generator import generate_entry
-from pure_random_skill_generator import (
-    generate_pure_random_skill,
-    generate_entries_from_skeleton,
-)
+from pure_random_skill_generator import generate_entries_from_skeleton
+
 from fitness import calculate_fitness_with_entries
 
 
@@ -35,9 +33,6 @@ def generate_ga_skill(
     else:
         population = list(population)
 
-    min_skeleton = skill_builder.get_min_skeleton()
-    min_len = len(min_skeleton)
-
     history = []
 
     for _ in range(generations):
@@ -62,17 +57,13 @@ def generate_ga_skill(
                 modifier_space=modifier_space,
                 skeleton_constraints=skeleton_constraints,
                 skill_builder=skill_builder,
-                min_skeleton=min_skeleton,
-                min_len=min_len,
             )
 
             child = mutate(
-                skill=child,
+                entries=child,
                 modifier_space=modifier_space,
                 skeleton_constraints=skeleton_constraints,
                 skill_builder=skill_builder,
-                min_skeleton=min_skeleton,
-                min_len=min_len,
                 mutation_rate=mutation_rate,
             )
 
@@ -182,17 +173,19 @@ def mutate(
     entries: list[Entry],
     modifier_space: dict,
     skeleton_constraints: dict,
-    min_skeleton: list[str],
-    min_len: int,
+    skill_builder: SkillBuilder,
     mutation_rate: float,
 ) -> list[Entry]:
+    min_length = skill_builder.get_min_skeleton_length()
+    min_skeleton = skill_builder.get_min_skeleton()
+
     for idx, entry in enumerate(entries):
         # filtering the mutation with mutation rate
         if random.random() >= mutation_rate:
             continue
 
         # only mutate tier for min skeleton slots
-        if idx < min_len:
+        if idx < min_length:
             new_tier = random.randint(1, config.TOTAL_TIERS)
             entries[idx] = generate_entry(
                 modifier_space=modifier_space,
@@ -212,7 +205,7 @@ def mutate(
         entries=entries,
         modifier_space=modifier_space,
         skeleton_constraints=skeleton_constraints,
-        min_len=min_len,
+        skill_builder=skill_builder,
     )
 
     return repaired_entries
@@ -222,60 +215,57 @@ def repair_entries(
     entries: list[Entry],
     modifier_space: dict,
     skeleton_constraints: dict,
-    # min_skeleton: list[str],
-    # min_length: int,
     skill_builder: SkillBuilder,
 ) -> list[Entry]:
-    constraints: dict = skeleton_constraints["constraints"]
+    constraints: dict = copy.deepcopy(skeleton_constraints["constraints"])
     max_length: int = skeleton_constraints["max_slots"]
     min_length = skill_builder.get_min_skeleton_length()
     min_skeleton = skill_builder.get_min_skeleton()
 
-    repaired_entry = copy.deepcopy(entries)
+    repaired_entries = copy.deepcopy(entries)
 
-    updated_constraints = copy.deepcopy(constraints)
     candidate_entry_types = list(modifier_space.keys())
 
-    # clean up candicate entry types
+    # consume min skeleton quotas first
     for entry_type in min_skeleton:
-        update_candidate_entry_types(
-            entry_type, candidate_entry_types, updated_constraints
-        )
+        update_candidate_entry_types(entry_type, candidate_entry_types, constraints)
 
-    # only repair optional part, prefix is assumed valid
+    # repair only optional part
     for idx in range(min_length, max_length):
-        entry = repaired_entry[idx]
+        entry = repaired_entries[idx]
         entry_type = entry.entry_type
 
         if entry_type in candidate_entry_types:
-            update_candidate_entry_types(
-                entry_type, candidate_entry_types, updated_constraints
-            )
+            update_candidate_entry_types(entry_type, candidate_entry_types, constraints)
         else:
-            replacement, _, _ = generate_valid_entry(
+            replacement = generate_valid_entry(
                 modifier_space=modifier_space,
                 candidate_entry_types=candidate_entry_types,
-                updated_constraints=updated_constraints,
+                updated_constraints=constraints,
             )
+            repaired_entries[idx] = replacement
 
-            repaired_entry[idx] = replacement
-
-    return repaired_entry
+    return repaired_entries
 
 
 def update_candidate_entry_types(
-    entry_type: str, candidate_entry_types: list[str], updated_constraints: dict
-) -> None:
-    if updated_constraints.get(entry_type, None) is not None:
+    entry_type: str,
+    candidate_entry_types: list[str],
+    updated_constraints: dict,
+):
+    if entry_type in updated_constraints:
         updated_constraints[entry_type]["max"] -= 1
+
         if updated_constraints[entry_type]["max"] <= 0:
-            candidate_entry_types.remove(entry_type)
+            if entry_type in candidate_entry_types:
+                candidate_entry_types.remove(entry_type)
 
 
 def generate_valid_entry(
-    modifier_space: dict, candidate_entry_types: list[str], updated_constraints: dict
-) -> tuple[Entry, set[str], dict]:
-
+    modifier_space: dict,
+    candidate_entry_types: list[str],
+    updated_constraints: dict,
+) -> Entry:
     if not candidate_entry_types:
         raise ValueError("No available candidate entry type possible")
 
@@ -284,36 +274,7 @@ def generate_valid_entry(
         chosen_entry_type, candidate_entry_types, updated_constraints
     )
 
-    return (
-        generate_entry(
-            modifier_space=modifier_space,
-            entry_type=chosen_entry_type,
-        ),
-        candidate_entry_types,
-        updated_constraints,
+    return generate_entry(
+        modifier_space=modifier_space,
+        entry_type=chosen_entry_type,
     )
-
-
-# def generate_valid_optional_entry(
-#     modifier_space: dict,
-#     constraints: dict,
-#     current_counts: dict,
-# ) -> Entry:
-#     candidate_entry_types = []
-
-#     for entry_type in modifier_space.keys():
-#         if entry_type in constraints:
-#             if current_counts.get(entry_type, 0) < constraints[entry_type]["max"]:
-#                 candidate_entry_types.append(entry_type)
-#         else:
-#             candidate_entry_types.append(entry_type)
-
-#     if not candidate_entry_types:
-#         raise ValueError("No valid optional entry type available during repair.")
-
-#     chosen_entry_type = random.choice(candidate_entry_types)
-
-#     return generate_entry(
-#         modifier_space=modifier_space,
-#         entry_type=chosen_entry_type,
-#     )
