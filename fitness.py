@@ -35,7 +35,7 @@ def calculate_fitness_with_entries(
     total_fatigue = result["total_fatigue"]
 
     if total_cost * total_fatigue == 0:
-        raise ValueError("Total cost/fatigue cannot be zero for fitness calculation.")
+       raise ValueError("Total cost/fatigue cannot be zero for fitness calculation.")
 
     # stronger penalty for higher damage loss
     dmg_loss = (1 - total_dmg / target_hp) ** 2

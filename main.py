@@ -27,6 +27,7 @@ def main():
     )
 
     dummy_skill_data = load_json(config.DUMMY_SKILL)
+    dummy_entries = skill_builder.load_entries_from_dict(dummy_skill_data)
     dummy_skill = skill_builder.load_skill_from_dict(dummy_skill_data)
 
     ss = SkillSimulator(base_character_status, base_character_status, 4)
@@ -119,6 +120,8 @@ def main():
     # GA skill generation and evaluation
     ga_population = pure_random_skill_list
 
+    start_time = time.perf_counter()
+
     total_runs = 10
     ga_generated_skill_list = []
 
@@ -152,8 +155,8 @@ def main():
     print("GA Filtered count:", len(filtered_ga_skill_results))
     print("GA Unique archetypes in filtered results:", unique_archetypes)
 
-    plt.hist(ga_generated_skill_fitness_list, bins=50)
-    plt.show()
+    # plt.hist(ga_generated_skill_fitness_list, bins=50)
+    # plt.show()
 
     end_time = time.perf_counter()
     print(f"Total time: {end_time - start_time:.6f} seconds")

@@ -9,7 +9,7 @@ def generate_entry(modifier_space: dict, entry_type=None, tier=None) -> Entry:
     if entry_type is None or entry_type not in modifier_space:
         entry_type = random.choice(list(modifier_space.keys()))
 
-    if entry_type == "skill_empty_space":
+    if entry_type == config.EMPTY_PADDING:
         return Entry(entry_type=entry_type, tier=1, value=0)
 
     property = modifier_space[entry_type]
