@@ -31,7 +31,7 @@ def extend_skeleton(
     max_slots = skeleton_constraints["max_slots"]
     constraints = skeleton_constraints["constraints"]
 
-    candidate_entry_types = set(modifier_space.keys())
+    candidate_entry_types = list(modifier_space.keys())
 
     counts = {}
     for entry_type in min_skeleton:
@@ -42,7 +42,7 @@ def extend_skeleton(
     # remove the candidate entries that hit max
     for entry_type, rule in constraints.items():
         if counts.get(entry_type, 0) >= rule["max"]:
-            candidate_entry_types.discard(entry_type)
+            candidate_entry_types.remove(entry_type)
 
     remaining_slots = max_slots - len(extended_skeleton)
 
@@ -50,13 +50,13 @@ def extend_skeleton(
         if not candidate_entry_types:
             raise ValueError("No candidate entry types available.")
 
-        chosen = random.choice(list(candidate_entry_types))
+        chosen = random.choice(candidate_entry_types)
         append_skeleton(extended_skeleton, chosen)
         counts[chosen] = counts.get(chosen, 0) + 1
         remaining_slots -= 1
 
         if chosen in constraints and counts[chosen] >= constraints[chosen]["max"]:
-            candidate_entry_types.discard(chosen)
+            candidate_entry_types.remove(chosen)
 
     return extended_skeleton
 

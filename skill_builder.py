@@ -58,3 +58,6 @@ class SkillBuilder:
     
     def get_min_skeleton(self) -> list[str]:
         return self.min_skeleton
+    
+    def get_min_skeleton_length(self) -> int:
+        return self.min_skeleton_length

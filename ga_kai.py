@@ -18,7 +18,7 @@ def generate_ga_skill(
     skeleton_constraints: dict,
     skill_builder: SkillBuilder,
     skill_simulator: SkillSimulator,
-    target_skill: Skill,
+    target_entries: list[Entry],
     population=list[list[Entry]],
     population_size: int = config.GA_POPULATION_SIZE,
     generations: int = config.GA_GENERATIONS,
@@ -44,7 +44,7 @@ def generate_ga_skill(
         scored_population = evaluate_population(
             population=population,
             skill_simulator=skill_simulator,
-            target_skill=target_skill,
+            target_entries=target_entries,
         )
 
         scored_population.sort(key=lambda x: x[0], reverse=True)
@@ -83,7 +83,7 @@ def generate_ga_skill(
     final_scored_population = evaluate_population(
         population=population,
         skill_simulator=skill_simulator,
-        target_skill=target_skill,
+        target_entries=target_entries,
     )
     final_scored_population.sort(key=lambda x: x[0], reverse=True)
 
@@ -117,7 +117,9 @@ def initialize_population(
 
 
 def evaluate_population(
-    population: list[list[Entry]], skill_simulator, target_skill: Skill
+    population: list[list[Entry]],
+    skill_simulator: SkillSimulator,
+    target_entries: list[Entry],
 ) -> list:
     scored_population = []
 
@@ -125,14 +127,16 @@ def evaluate_population(
         fitness = calculate_fitness_with_entries(
             skill_simulator=skill_simulator,
             attacker_skill_entries=entries,
-            target_skill_entries=target_skill.get_entries(),
+            target_skill_entries=target_entries,
         )
         scored_population.append((fitness, entries))
 
     return scored_population
 
 
-def tournament_select(scored_population, tournament_size: int = 3) -> Skill:
+def tournament_select(
+    scored_population: list[tuple[float, list[Entry]]], tournament_size: int = 3
+) -> list[Entry]:
     candidates = random.sample(scored_population, tournament_size)
     candidates.sort(key=lambda x: x[0], reverse=True)
     return candidates[0][1]
@@ -218,61 +222,98 @@ def repair_entries(
     entries: list[Entry],
     modifier_space: dict,
     skeleton_constraints: dict,
-    min_len: int,
+    # min_skeleton: list[str],
+    # min_length: int,
+    skill_builder: SkillBuilder,
 ) -> list[Entry]:
-    constraints = skeleton_constraints["constraints"]
+    constraints: dict = skeleton_constraints["constraints"]
+    max_length: int = skeleton_constraints["max_slots"]
+    min_length = skill_builder.get_min_skeleton_length()
+    min_skeleton = skill_builder.get_min_skeleton()
 
-    repaired = copy.deepcopy(entries)
+    repaired_entry = copy.deepcopy(entries)
 
-    counts = {}
-    for entry in repaired:
-        counts[entry.entry_type] = counts.get(entry.entry_type, 0) + 1
+    updated_constraints = copy.deepcopy(constraints)
+    candidate_entry_types = list(modifier_space.keys())
+
+    # clean up candicate entry types
+    for entry_type in min_skeleton:
+        update_candidate_entry_types(
+            entry_type, candidate_entry_types, updated_constraints
+        )
 
     # only repair optional part, prefix is assumed valid
-    for idx in range(min_len, len(repaired)):
-        entry = repaired[idx]
+    for idx in range(min_length, max_length):
+        entry = repaired_entry[idx]
         entry_type = entry.entry_type
 
-        if entry_type in constraints:
-            max_count = constraints[entry_type]["max"]
-
-            if counts.get(entry_type, 0) > max_count:
-                counts[entry_type] -= 1
-
-                replacement = generate_valid_optional_entry(
-                    modifier_space=modifier_space,
-                    constraints=constraints,
-                    current_counts=counts,
-                )
-
-                repaired[idx] = replacement
-                counts[replacement.entry_type] = (
-                    counts.get(replacement.entry_type, 0) + 1
-                )
-
-    return repaired
-
-
-def generate_valid_optional_entry(
-    modifier_space: dict,
-    constraints: dict,
-    current_counts: dict,
-) -> Entry:
-    candidate_entry_types = []
-
-    for entry_type in modifier_space.keys():
-        if entry_type in constraints:
-            if current_counts.get(entry_type, 0) < constraints[entry_type]["max"]:
-                candidate_entry_types.append(entry_type)
+        if entry_type in candidate_entry_types:
+            update_candidate_entry_types(
+                entry_type, candidate_entry_types, updated_constraints
+            )
         else:
-            candidate_entry_types.append(entry_type)
+            replacement, _, _ = generate_valid_entry(
+                modifier_space=modifier_space,
+                candidate_entry_types=candidate_entry_types,
+                updated_constraints=updated_constraints,
+            )
+
+            repaired_entry[idx] = replacement
+
+    return repaired_entry
+
+
+def update_candidate_entry_types(
+    entry_type: str, candidate_entry_types: list[str], updated_constraints: dict
+) -> None:
+    if updated_constraints.get(entry_type, None) is not None:
+        updated_constraints[entry_type]["max"] -= 1
+        if updated_constraints[entry_type]["max"] <= 0:
+            candidate_entry_types.remove(entry_type)
+
+
+def generate_valid_entry(
+    modifier_space: dict, candidate_entry_types: list[str], updated_constraints: dict
+) -> tuple[Entry, set[str], dict]:
 
     if not candidate_entry_types:
-        raise ValueError("No valid optional entry type available during repair.")
+        raise ValueError("No available candidate entry type possible")
 
     chosen_entry_type = random.choice(candidate_entry_types)
-
-    return generate_entry(
-        modifier_space=modifier_space,
-        entry_type=chosen_entry_type,
+    update_candidate_entry_types(
+        chosen_entry_type, candidate_entry_types, updated_constraints
     )
+
+    return (
+        generate_entry(
+            modifier_space=modifier_space,
+            entry_type=chosen_entry_type,
+        ),
+        candidate_entry_types,
+        updated_constraints,
+    )
+
+
+# def generate_valid_optional_entry(
+#     modifier_space: dict,
+#     constraints: dict,
+#     current_counts: dict,
+# ) -> Entry:
+#     candidate_entry_types = []
+
+#     for entry_type in modifier_space.keys():
+#         if entry_type in constraints:
+#             if current_counts.get(entry_type, 0) < constraints[entry_type]["max"]:
+#                 candidate_entry_types.append(entry_type)
+#         else:
+#             candidate_entry_types.append(entry_type)
+
+#     if not candidate_entry_types:
+#         raise ValueError("No valid optional entry type available during repair.")
+
+#     chosen_entry_type = random.choice(candidate_entry_types)
+
+#     return generate_entry(
+#         modifier_space=modifier_space,
+#         entry_type=chosen_entry_type,
+#     )
