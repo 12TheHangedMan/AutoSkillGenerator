@@ -10,6 +10,13 @@ from models import Entry
 
 # generate integer levels
 def generate_levels(min_val: int, max_val: int, step: int) -> list[int]:
+    if (min_val > max_val):
+        raise ValueError("min_val cannot be greater than max_val")
+    if (step < 0):
+        raise ValueError("Invalid step")
+    if (min_val == max_val):
+        return [min_val]
+    
     return list(range(min_val, max_val + 1, step))
 
 
@@ -42,6 +49,9 @@ def base_ratio_calculation(a: int, b: int) -> float:
 
 
 def split_into_tiers(levels, total_tiers):
+    if len(levels) < total_tiers:
+        raise ValueError("Total tiers is smaller than levels.")
+
     n = len(levels)
     base_size = n // total_tiers
     remainder = n % total_tiers

@@ -7,6 +7,7 @@ from skill_builder import SkillBuilder
 from skill_simulator import SkillSimulator
 from entry_generator import generate_entry
 from pure_random_skill_generator import generate_entries_from_skeleton
+from data_loader import load_data, load_json
 
 from fitness import calculate_fitness_with_entries
 
@@ -17,13 +18,13 @@ def generate_ga_skill(
     skill_builder: SkillBuilder,
     skill_simulator: SkillSimulator,
     target_entries: list[Entry],
-    population=list[list[Entry]],
+    population: list[list[Entry]] = None,
     population_size: int = config.GA_POPULATION_SIZE,
     generations: int = config.GA_GENERATIONS,
     mutation_rate: float = config.GA_MUTATION_RATE,
     elite_size: int = config.GA_ELITE_SIZE,
 ):
-    if len(population) == 0:
+    if population is None or len(population) == 0:
         population = initialize_population(
             modifier_space=modifier_space,
             skeleton_constraints=skeleton_constraints,
@@ -139,7 +140,6 @@ def crossover(
     modifier_space: dict,
     skeleton_constraints: dict,
     skill_builder: SkillBuilder,
-    min_len: int,
 ) -> list[Entry]:
 
     if len(parent_a) != len(parent_b):
@@ -157,16 +157,17 @@ def crossover(
         entries=child_entries_1,
         modifier_space=modifier_space,
         skeleton_constraints=skeleton_constraints,
+        skill_builder=skill_builder,
     )
 
     repaired_entries_2 = repair_entries(
         entries=child_entries_2,
         modifier_space=modifier_space,
         skeleton_constraints=skeleton_constraints,
-        min_len=min_len,
+        skill_builder=skill_builder,
     )
 
-    return skill_builder.build_skill(repaired_entries_1)
+    return repaired_entries_1
 
 
 def mutate(
@@ -179,7 +180,7 @@ def mutate(
     min_length = skill_builder.get_min_skeleton_length()
     min_skeleton = skill_builder.get_min_skeleton()
 
-    for idx, entry in enumerate(entries):
+    for idx in range(len(entries)):
         # filtering the mutation with mutation rate
         if random.random() >= mutation_rate:
             continue
@@ -211,6 +212,7 @@ def mutate(
     return repaired_entries
 
 
+# repair entries module
 def repair_entries(
     entries: list[Entry],
     modifier_space: dict,
@@ -224,7 +226,7 @@ def repair_entries(
 
     repaired_entries = copy.deepcopy(entries)
 
-    candidate_entry_types = list(modifier_space.keys())
+    candidate_entry_types = set(modifier_space.keys())
 
     # consume min skeleton quotas first
     for entry_type in min_skeleton:
@@ -250,7 +252,7 @@ def repair_entries(
 
 def update_candidate_entry_types(
     entry_type: str,
-    candidate_entry_types: list[str],
+    candidate_entry_types: set[str],
     updated_constraints: dict,
 ):
     if entry_type in updated_constraints:
@@ -258,18 +260,18 @@ def update_candidate_entry_types(
 
         if updated_constraints[entry_type]["max"] <= 0:
             if entry_type in candidate_entry_types:
-                candidate_entry_types.remove(entry_type)
+                candidate_entry_types.discard(entry_type)
 
 
 def generate_valid_entry(
     modifier_space: dict,
-    candidate_entry_types: list[str],
+    candidate_entry_types: set[str],
     updated_constraints: dict,
 ) -> Entry:
     if not candidate_entry_types:
         raise ValueError("No available candidate entry type possible")
 
-    chosen_entry_type = random.choice(candidate_entry_types)
+    chosen_entry_type = random.choice(list(candidate_entry_types))
     update_candidate_entry_types(
         chosen_entry_type, candidate_entry_types, updated_constraints
     )
@@ -278,3 +280,21 @@ def generate_valid_entry(
         modifier_space=modifier_space,
         entry_type=chosen_entry_type,
     )
+
+
+base_character_status, modifier_space, skeleton_constraints = load_data()
+skill_builder = SkillBuilder(modifier_space, skeleton_constraints)
+dummy_skill_data = load_json(config.DUMMY_SKILL)
+dummy_entries = skill_builder.load_entries_from_dict(dummy_skill_data)
+ss = SkillSimulator(base_character_status, base_character_status, 4)
+
+ga_result = generate_ga_skill(
+    modifier_space=modifier_space,
+    skeleton_constraints=skeleton_constraints,
+    skill_builder=skill_builder,
+    skill_simulator=ss,
+    target_entries=dummy_entries,
+    # population=ga_population,
+)
+
+# print("best fitness:", ga_result["best_fitness"])

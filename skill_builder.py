@@ -42,7 +42,7 @@ class SkillBuilder:
         # sort min skeleton to ensure the essential entry types are in order (for GA crossover)
         return sorted(skeleton)
 
-    def load_skill_from_dict(self, raw_skill_data: dict) -> Skill:
+    def load_entries_from_dict(self, raw_skill_data: dict) -> list[Entry]:
         entries = [
             Entry(
                 entry_type=raw_entry["entry_type"],
@@ -51,13 +51,17 @@ class SkillBuilder:
             )
             for raw_entry in raw_skill_data.get("entries", [])
         ]
+        return entries
+
+    def load_skill_from_dict(self, raw_skill_data: dict) -> Skill:
+        entries = self.load_entries_from_dict(raw_skill_data)
 
         skill_id = raw_skill_data.get("skill_id")
 
         return self.build_skill(entries=entries, skill_id=skill_id)
-    
+
     def get_min_skeleton(self) -> list[str]:
         return self.min_skeleton
-    
+
     def get_min_skeleton_length(self) -> int:
         return self.min_skeleton_length
