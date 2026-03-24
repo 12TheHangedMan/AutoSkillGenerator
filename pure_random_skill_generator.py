@@ -7,13 +7,22 @@ import random
 def generate_pure_random_skill(
     modifier_space: dict, skeleton_constraints: dict, skill_builder: SkillBuilder
 ):
+    entries = generate_entries_from_skeleton(
+        modifier_space, skeleton_constraints, skill_builder
+    )
+
+    return skill_builder.build_skill(entries)
+
+
+def generate_entries_from_skeleton(
+    modifier_space: dict, skeleton_constraints: dict, skill_builder: SkillBuilder
+) -> list[Entry]:
     min_skeleton = skill_builder.get_min_skeleton()
     extended_skeleton = extend_skeleton(
         modifier_space, skeleton_constraints, min_skeleton
     )
     entries = fill_skeleton(modifier_space, extended_skeleton)
-
-    return skill_builder.build_skill(entries)
+    return entries
 
 
 def extend_skeleton(

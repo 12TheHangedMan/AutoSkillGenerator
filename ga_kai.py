@@ -6,7 +6,10 @@ from models import Entry, Skill
 from skill_builder import SkillBuilder
 from skill_simulator import SkillSimulator
 from entry_generator import generate_entry
-from pure_random_skill_generator import generate_pure_random_skill
+from pure_random_skill_generator import (
+    generate_pure_random_skill,
+    generate_entries_from_skeleton,
+)
 from fitness import calculate_fitness_with_entries
 
 
@@ -104,12 +107,11 @@ def initialize_population(
     population = []
 
     for _ in range(population_size):
-        skill = generate_pure_random_skill(
-            modifier_space=modifier_space,
-            skeleton_constraints=skeleton_constraints,
-            skill_builder=skill_builder,
+        entries = generate_entries_from_skeleton(
+            modifier_space, skeleton_constraints, skill_builder
         )
-        population.append(skill)
+
+        population.append(entries)
 
     return population
 
@@ -142,67 +144,50 @@ def crossover(
     modifier_space: dict,
     skeleton_constraints: dict,
     skill_builder: SkillBuilder,
-    min_skeleton: list[str],
     min_len: int,
-) -> Skill:
-    min_entries_a = parent_a[:min_len]
-    min_entries_b = parent_b[:min_len]
+) -> list[Entry]:
 
-    optional_entries_a = parent_a[min_len:]
-    optional_entries_b = parent_b[min_len:]
-
-    # prefix: keep entry_type fixed, crossover tier by position
-    child_entries = []
-
-    for idx in range(min_len):
-        chosen_parent_entry = random.choice([min_entries_a[idx], min_entries_b[idx]])
-        fixed_entry_type = min_skeleton[idx]
-        chosen_tier = chosen_parent_entry.tier
-
-        child_entry = generate_entry(
-            modifier_space=modifier_space,
-            entry_type=fixed_entry_type,
-            tier=chosen_tier,
+    if len(parent_a) != len(parent_b):
+        raise ValueError(
+            "Parent skill entries must be of the same length for crossover."
         )
-        child_entries.append(child_entry)
 
-    # optional part: one-point crossover on full genes
-    if len(optional_entries_a) != len(optional_entries_b):
-        raise ValueError("Optional entry lengths do not match during crossover.")
+    length = len(parent_a)
+    pivot = random.randint(1, length - 1)
 
-    optional_len = len(optional_entries_a)
+    child_entries_1 = parent_a[:pivot] + parent_b[pivot:]
+    child_entries_2 = parent_b[:pivot] + parent_a[pivot:]
 
-    if optional_len > 0:
-        cut = random.randint(0, optional_len)
-        child_optional = copy.deepcopy(optional_entries_a[:cut]) + copy.deepcopy(
-            optional_entries_b[cut:]
-        )
-        child_entries.extend(child_optional)
+    repaired_entries_1 = repair_entries(
+        entries=child_entries_1,
+        modifier_space=modifier_space,
+        skeleton_constraints=skeleton_constraints,
+    )
 
-    repaired_entries = repair_entries(
-        entries=child_entries,
+    repaired_entries_2 = repair_entries(
+        entries=child_entries_2,
         modifier_space=modifier_space,
         skeleton_constraints=skeleton_constraints,
         min_len=min_len,
     )
 
-    return skill_builder.build_skill(repaired_entries)
+    return skill_builder.build_skill(repaired_entries_1)
 
 
 def mutate(
     entries: list[Entry],
     modifier_space: dict,
     skeleton_constraints: dict,
-    skill_builder: SkillBuilder,
     min_skeleton: list[str],
     min_len: int,
     mutation_rate: float,
-) -> Skill:
+) -> list[Entry]:
     for idx, entry in enumerate(entries):
+        # filtering the mutation with mutation rate
         if random.random() >= mutation_rate:
             continue
 
-        # prefix part: only mutate tier
+        # only mutate tier for min skeleton slots
         if idx < min_len:
             new_tier = random.randint(1, config.TOTAL_TIERS)
             entries[idx] = generate_entry(
@@ -211,23 +196,13 @@ def mutate(
                 tier=new_tier,
             )
 
-        # optional part: mutate either entry_type or tier
+        # mutate either entry_type or tier for the rest slots
         else:
-            if random.random() < 0.5:
-                # mutate tier only
-                new_tier = random.randint(1, config.TOTAL_TIERS)
-                entries[idx] = generate_entry(
-                    modifier_space=modifier_space,
-                    entry_type=entry.entry_type,
-                    tier=new_tier,
-                )
-            else:
-                # mutate entry_type + random tier
-                new_entry_type = random.choice(list(modifier_space.keys()))
-                entries[idx] = generate_entry(
-                    modifier_space=modifier_space,
-                    entry_type=new_entry_type,
-                )
+            new_tier = random.randint(1, config.TOTAL_TIERS)
+            new_entry_type = random.choice(list(modifier_space.keys()))
+            entries[idx] = generate_entry(
+                modifier_space=modifier_space, entry_type=new_entry_type, tier=new_tier
+            )
 
     repaired_entries = repair_entries(
         entries=entries,
@@ -236,7 +211,7 @@ def mutate(
         min_len=min_len,
     )
 
-    return skill_builder.build_skill(repaired_entries)
+    return repaired_entries
 
 
 def repair_entries(
