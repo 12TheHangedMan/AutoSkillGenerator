@@ -19,14 +19,11 @@ def sample_tier_by_gauss(
     tier = max(min_tier, min(max_tier, tier))
     return tier
 
-
-def generate_rule_based_random_skill(
-    modifier_space: dict,
+def generate_rule_based_random_entries(modifier_space: dict,
     skeleton_constraints: dict,
     skill_builder: SkillBuilder,
     tier_mean: float,
-    sigma: float = 0.8,
-):
+    sigma: float = 0.8,) -> list[Entry]:
     min_skeleton = skill_builder.get_min_skeleton()
     extended_skeleton = extend_skeleton(
         modifier_space, skeleton_constraints, min_skeleton
@@ -35,6 +32,24 @@ def generate_rule_based_random_skill(
     entries = fill_skeleton(
         modifier_space=modifier_space,
         skeleton=extended_skeleton,
+        tier_mean=tier_mean,
+        sigma=sigma,
+    )
+
+    return entries
+
+
+def generate_rule_based_random_skill(
+    modifier_space: dict,
+    skeleton_constraints: dict,
+    skill_builder: SkillBuilder,
+    tier_mean: float,
+    sigma: float = 0.8,
+):
+    entries = generate_rule_based_random_entries(
+        modifier_space=modifier_space,
+        skeleton_constraints=skeleton_constraints,
+        skill_builder=skill_builder,
         tier_mean=tier_mean,
         sigma=sigma,
     )
@@ -57,12 +72,13 @@ def fill_skeleton(
             max_tier=config.TOTAL_TIERS,
         )
 
-        entries.append(
+        append_entries(
+            entries,
             generate_entry(
                 modifier_space=modifier_space,
                 entry_type=entry_type,
                 tier=tier,
-            )
+            ),
         )
 
     return entries

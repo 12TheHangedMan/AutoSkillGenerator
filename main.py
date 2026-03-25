@@ -19,7 +19,17 @@ np.random.seed(config.SEED)
 def main():
     start_time = time.perf_counter()
 
-    base_character_status, modifier_space, skeleton_constraints = load_data()
+    base_character_status_templates, modifier_space, skeleton_constraints = load_data()
+
+    base_character_status_basic_template = base_character_status_templates["basic_template"]
+
+    base_character_status_berserk_template = base_character_status_templates["berserk_template"]
+    base_character_status_glass_cannon_template = base_character_status_templates["glass_cannon_template"]
+    base_character_status_tank_template = base_character_status_templates["tank_template"]
+    base_character_status_elite_template = base_character_status_templates["elite_template"]
+    base_character_status_boss_template = base_character_status_templates["boss_template"]
+
+    target_base_character_status = base_character_status_boss_template
 
     skill_builder = SkillBuilder(modifier_space, skeleton_constraints)
     test_unit_skill = generate_pure_random_skill(
@@ -30,9 +40,10 @@ def main():
     dummy_entries = skill_builder.load_entries_from_dict(dummy_skill_data)
     dummy_skill = skill_builder.load_skill_from_dict(dummy_skill_data)
 
-    ss = SkillSimulator(base_character_status, base_character_status, 4)
+    ss = SkillSimulator(base_character_status_basic_template, target_base_character_status, 4)
     pure_random_results = []
 
+    start_time = time.perf_counter()
     # pure random skill evaluation and metrics
     for _ in range(config.SAMPLES_PER_FOLD):
         test_unit_skill = generate_pure_random_skill(
@@ -99,9 +110,11 @@ def main():
 
     best_rule_based_skill_fitness_list = [f for f, _ in best_fold_results]
     best_rule_based_skill_variance = np.var(best_rule_based_skill_fitness_list)
+
     filtered_best_rule_based_skill_results = [
         (f, s) for f, s in best_fold_results if f > -200
     ]
+
     unique_archetypes = len(
         set(s.archetype_id for _, s in filtered_best_rule_based_skill_results)
     )
@@ -120,10 +133,8 @@ def main():
     # GA skill generation and evaluation
     ga_population = pure_random_skill_list
 
-    start_time = time.perf_counter()
-
     total_runs = 10
-    ga_generated_skill_list = []
+    ga_generated_skill_list_with_fitness = []
 
     for _ in range(total_runs):
         ga_result = generate_ga_skill(
@@ -131,21 +142,20 @@ def main():
             skeleton_constraints=skeleton_constraints,
             skill_builder=skill_builder,
             skill_simulator=ss,
-            target_skill=dummy_skill,
+            target_entries=dummy_entries,
             # population=ga_population,
         )
 
-        ga_generated_skill_list.extend(ga_result["population"])
+        ga_generated_skill_list_with_fitness.extend(ga_result["scored_skills"])
 
     ga_generated_skill_fitness_list = [
-        calculate_fitness(ss, s, dummy_skill) for s in ga_generated_skill_list
+        f for f, _ in ga_generated_skill_list_with_fitness
     ]
     ga_skill_variance = np.var(ga_generated_skill_fitness_list)
     filtered_ga_skill_results = [
-        (f, s)
-        for f, s in zip(ga_generated_skill_fitness_list, ga_generated_skill_list)
-        if f > -200
+        (f, s) for f, s in ga_generated_skill_list_with_fitness if f > -200
     ]
+
     unique_archetypes = len(set(s.archetype_id for _, s in filtered_ga_skill_results))
 
     print("GA variance:", ga_skill_variance)
@@ -155,8 +165,8 @@ def main():
     print("GA Filtered count:", len(filtered_ga_skill_results))
     print("GA Unique archetypes in filtered results:", unique_archetypes)
 
-    # plt.hist(ga_generated_skill_fitness_list, bins=50)
-    # plt.show()
+    plt.hist(ga_generated_skill_fitness_list, bins=50)
+    plt.show()
 
     end_time = time.perf_counter()
     print(f"Total time: {end_time - start_time:.6f} seconds")

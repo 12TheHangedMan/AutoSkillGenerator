@@ -1,9 +1,62 @@
 {
-    "base_attack": 100,
-    "base_hit_rate": 75,
-    "base_critical_rate": 25,
-    "base_critical_multiplier": 25,
-    "base_defense": 100,
-    "base_dodge": 25,
-    "base_anti_critical": 75
+    "basic_template": {
+        "base_attack": 100,
+        "base_hit_rate": 75,
+        "base_critical_rate": 25,
+        "base_critical_multiplier": 25,
+        "base_defense": 100,
+        "base_dodge": 25,
+        "base_anti_critical": 75,
+        "base_hp": 1000
+    },
+    "berserk_template": {
+        "base_attack": 150,
+        "base_hit_rate": 75,
+        "base_critical_rate": 25,
+        "base_critical_multiplier": 25,
+        "base_defense": 50,
+        "base_dodge": 10,
+        "base_anti_critical": 50,
+        "base_hp": 1000
+    },
+    "glass_cannon_template": {
+        "base_attack": 200,
+        "base_hit_rate": 75,
+        "base_critical_rate": 50,
+        "base_critical_multiplier": 50,
+        "base_defense": 5,
+        "base_dodge": 5,
+        "base_anti_critical": 10,
+        "base_hp": 1000
+    },
+    "tank_template": {
+        "base_attack": 50,
+        "base_hit_rate": 75,
+        "base_critical_rate": 25,
+        "base_critical_multiplier": 25,
+        "base_defense": 200,
+        "base_dodge": 25,
+        "base_anti_critical": 100,
+        "base_hp": 2000
+    },
+    "elite_template": {
+        "base_attack": 120,
+        "base_hit_rate": 75,
+        "base_critical_rate": 25,
+        "base_critical_multiplier": 25,
+        "base_defense": 120,
+        "base_dodge": 25,
+        "base_anti_critical": 75,
+        "base_hp": 1500
+    },
+    "boss_template": {
+        "base_attack": 200,
+        "base_hit_rate": 75,
+        "base_critical_rate": 25,
+        "base_critical_multiplier": 25,
+        "base_defense": 200,
+        "base_dodge": 25,
+        "base_anti_critical": 100,
+        "base_hp": 3000
+    }
 }
