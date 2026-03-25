@@ -4,7 +4,7 @@ SKILL_SKELETON_CONSTRAINT_SPACE = "skill_skeleton_constraint_space.json"
 CHARACTER_BASIC_MODIFIERS = "character_basic_modifier.json"
 SKILL_MODIFIER_SPACE = "skill_modifier_space.json"
 DUMMY_SKILL = "dummy_skill.json"
-
+EMPTY_PADDING = "skill_empty_space"
 
 # in game parameters
 # not starting from 0, saving space for manual input testing skills

@@ -1,6 +1,6 @@
 from dataclasses import dataclass, field
 import hashlib
-
+import config
 
 @dataclass(frozen=True)
 class Entry:
@@ -30,7 +30,11 @@ class Skill:
         - value does NOT affect archetype identity
         - entry order does NOT affect archetype identity
         """
-        signature_parts = [f"{entry.entry_type}:{entry.tier}" for entry in self.entries]
+        signature_parts = [
+            f"{entry.entry_type}:{entry.tier}"
+            for entry in self.entries
+            if entry.entry_type != config.EMPTY_PADDING  # ignore empty padding for archetype identity
+        ]
         signature_parts.sort()
         return "|".join(signature_parts)
 
