@@ -15,37 +15,37 @@
           "step": 1
      },
      "skill_ignore_defense": {
-          "min": 0,
+          "min": 1,
           "max": 100,
           "step": 1
      },
      "skill_critical_chance": {
-          "min": 0,
+          "min": 1,
           "max": 100,
           "step": 1
      },
      "skill_critical_multiplication": {
-          "min": 0,
+          "min": 1,
           "max": 100,
           "step": 1
      },
      "skill_hit_rate": {
-          "min": 0,
+          "min": 1,
           "max": 100,
           "step": 1
      },
      "skill_attack_multiplication": {
-          "min": 0,
+          "min": 1,
           "max": 100,
           "step": 1
      },
      "skill_cost_reduction_ratio": {
-          "min": 0,
+          "min": 1,
           "max": 99,
           "step": 1
      },
      "skill_fatigue_reduction_ratio": {
-          "min": 0,
+          "min": 1,
           "max": 99,
           "step": 1
      },
