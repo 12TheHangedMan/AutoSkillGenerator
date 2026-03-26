@@ -9,14 +9,12 @@ def calculate_fitness(
     target_skill: Skill,
     target_hp: int = config.TARGET_HP,
 ) -> float:
-
-    result = calculate_fitness_with_entries(
+    return calculate_fitness_with_entries(
         skill_simulator=skill_simulator,
         attacker_skill_entries=attacker_skill.get_entries(),
         target_skill_entries=target_skill.get_entries(),
         target_hp=target_hp,
     )
-    return result
 
 
 def calculate_fitness_with_entries(
@@ -25,11 +23,23 @@ def calculate_fitness_with_entries(
     target_skill_entries: list[Entry],
     target_hp: int = config.TARGET_HP,
 ) -> float:
-
     result = skill_simulator.simulate_with_entries(
-        attacker_entries=attacker_skill_entries, target_entries=target_skill_entries
+        attacker_entries=attacker_skill_entries,
+        target_entries=target_skill_entries,
     )
 
+    losses = calculate_loss_components_from_result(
+        result=result,
+        target_hp=target_hp,
+    )
+
+    return aggregate_losses_to_fitness(losses)
+
+
+def calculate_loss_components_from_result(
+    result: dict,
+    target_hp: int = config.TARGET_HP,
+) -> dict:
     total_dmg = result["total_dmg_made"]
     total_dmg_taken = result["total_dmg_taken"]
     total_cost = result["total_cost"]
@@ -38,43 +48,41 @@ def calculate_fitness_with_entries(
     if total_cost * total_fatigue == 0:
         raise ValueError("Total cost/fatigue cannot be zero for fitness calculation.")
 
-    # stronger penalty for higher damage loss
     dmg_loss = calculate_dmg_loss(total_dmg, target_hp)
     cost_loss = calculate_cost_loss(total_cost, total_dmg)
     fatigue_loss = calculate_fatigue_loss(total_fatigue, total_dmg)
     dmg_taken_loss = calculate_dmg_taken_loss(total_dmg_taken, total_dmg, target_hp)
 
-    cost_loss *= 0.5
-    fatigue_loss *= 0.5
+    return {
+        "dmg_loss": dmg_loss,
+        "cost_loss": cost_loss,
+        "fatigue_loss": fatigue_loss,
+        "dmg_taken_loss": dmg_taken_loss,
+    }
 
-    fitness = -dmg_loss - cost_loss - fatigue_loss - dmg_taken_loss / 1000
-    return fitness * 1000
+
+def aggregate_losses_to_fitness(losses: dict) -> float:
+    total_loss = (
+        losses["dmg_loss"] * 1.0
+        + (losses["cost_loss"] + losses["fatigue_loss"]) * 0.5
+        + losses["dmg_taken_loss"]
+    )
+    return -total_loss * 1000
 
 
 def calculate_dmg_loss(total_dmg: float, target_hp: int) -> float:
-    # dmg loss is determined by how many rounds it takes to defeat the target
-    # the ideal case is to defeat the target as close to the designed total rounds as possible
-    dmg_loss = (1 - total_dmg / target_hp) ** 2
-
-    return dmg_loss
+    return (1 - target_hp / total_dmg) ** 2
 
 
 def calculate_cost_loss(total_cost: float, total_dmg: float) -> float:
-    cost_loss = (total_cost + 1) ** 0.8 / total_dmg
-
-    return cost_loss
+    return (1 - total_dmg / (total_cost * 1 + 1e-6)) ** 2
 
 
 def calculate_fatigue_loss(total_fatigue: float, total_dmg: float) -> float:
-    fatigue_loss = (total_fatigue + 1) ** 0.8 / total_dmg
-
-    return fatigue_loss
+    return (1 - total_dmg / (total_fatigue * 1 + 1e-6)) ** 2
 
 
 def calculate_dmg_taken_loss(
     total_dmg_taken: float, total_dmg: float, target_hp: int
 ) -> float:
-    # determined by how many rounds the battle lasts
-    dmg_taken_loss = target_hp * total_dmg_taken / total_dmg
-
-    return dmg_taken_loss
+    return total_dmg_taken / total_dmg

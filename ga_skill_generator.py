@@ -110,7 +110,6 @@ def generate_ga_entries(
             child1 = mutate(
                 entries=child1,
                 modifier_space=modifier_space,
-                skeleton_constraints=skeleton_constraints,
                 skill_builder=skill_builder,
                 mutation_rate=mutation_rate,
             )
@@ -118,7 +117,6 @@ def generate_ga_entries(
             child2 = mutate(
                 entries=child2,
                 modifier_space=modifier_space,
-                skeleton_constraints=skeleton_constraints,
                 skill_builder=skill_builder,
                 mutation_rate=mutation_rate,
             )
@@ -230,7 +228,6 @@ def crossover(
 def mutate(
     entries: list[Entry],
     modifier_space: dict,
-    skeleton_constraints: dict,
     skill_builder: SkillBuilder,
     mutation_rate: float,
 ) -> list[Entry]:
@@ -270,7 +267,7 @@ def repair_entries(
     skill_builder: SkillBuilder,
 ) -> list[Entry]:
     # constraints: dict = copy.deepcopy(skeleton_constraints["constraints"])
-    constraints = {
+    remaining_quota = {
         entry_type: rule["max"]
         for entry_type, rule in skeleton_constraints["constraints"].items()
     }
@@ -284,7 +281,7 @@ def repair_entries(
 
     # consume min skeleton quotas first
     for entry_type in min_skeleton:
-        update_candidate_entry_types(entry_type, candidate_entry_types, constraints)
+        update_candidate_entry_types(entry_type, candidate_entry_types, remaining_quota)
 
     # repair only optional part
     for idx in range(min_length, max_length):
@@ -292,12 +289,12 @@ def repair_entries(
         entry_type = entry.entry_type
 
         if entry_type in candidate_entry_types:
-            update_candidate_entry_types(entry_type, candidate_entry_types, constraints)
+            update_candidate_entry_types(entry_type, candidate_entry_types, remaining_quota)
         else:
             replacement = generate_valid_entry(
                 modifier_space=modifier_space,
                 candidate_entry_types=candidate_entry_types,
-                updated_constraints=constraints,
+                remaining_quota=remaining_quota,
             )
             repaired_entries[idx] = replacement
 
@@ -307,12 +304,12 @@ def repair_entries(
 def update_candidate_entry_types(
     entry_type: str,
     candidate_entry_types: set[str],
-    updated_constraints: dict,
+    remaining_quota: dict,
 ):
-    if entry_type in updated_constraints:
-        updated_constraints[entry_type] -= 1
+    if entry_type in remaining_quota:
+        remaining_quota[entry_type] -= 1
 
-        if updated_constraints[entry_type] <= 0:
+        if remaining_quota[entry_type] <= 0:
             if entry_type in candidate_entry_types:
                 candidate_entry_types.discard(entry_type)
 
@@ -320,14 +317,14 @@ def update_candidate_entry_types(
 def generate_valid_entry(
     modifier_space: dict,
     candidate_entry_types: set[str],
-    updated_constraints: dict,
+    remaining_quota: dict,
 ) -> Entry:
     if not candidate_entry_types:
         raise ValueError("No available candidate entry type possible")
 
     chosen_entry_type = random.choice(list(candidate_entry_types))
     update_candidate_entry_types(
-        chosen_entry_type, candidate_entry_types, updated_constraints
+        chosen_entry_type, candidate_entry_types, remaining_quota
     )
 
     return generate_entry(
