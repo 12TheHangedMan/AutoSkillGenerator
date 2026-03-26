@@ -44,7 +44,7 @@ def main():
         "boss_template"
     ]
 
-    target_base_character_status = base_character_status_basic_template
+    target_base_character_status = base_character_status_elite_template
 
     skill_builder = SkillBuilder(modifier_space, skeleton_constraints)
     test_unit_skill = generate_pure_random_skill(
@@ -222,9 +222,11 @@ def main():
     # plt.show()
 
 
-    # Heuristic skill generation and evaluation
+    # proxy strong rule based skill generation and evaluation
     delta_greedy_skill_fitness_list = []
     delta_greedy_skill_results = []
+
+    c = 1
 
     for _ in range(config.SAMPLES_PER_FOLD):
         delta_greedy_skill = generate_delta_greedy_skill(
@@ -233,8 +235,8 @@ def main():
             skill_builder=skill_builder,
             skill_simulator=ss,
             target_entries=dummy_entries,
-            c = 0.75,
-            samples_per_type=2,
+            c = c,
+            samples_per_type=1, # keep it 1 for fairness
         )
         fitness = calculate_fitness(ss, delta_greedy_skill, dummy_skill)
         delta_greedy_skill_fitness_list.append(fitness)
@@ -257,12 +259,12 @@ def main():
     unique_archetypes = len(
         set(s.archetype_id for _, s in filtered_delta_greedy_skill_results)
     )
-    print("Delta-Greedy variance:", delta_greedy_skill_variance)
-    print("Delta-Greedy mean:", np.mean(delta_greedy_skill_fitness_list))
-    print("Delta-Greedy max:", np.max(delta_greedy_skill_fitness_list))
-    print("Delta-Greedy min:", np.min(delta_greedy_skill_fitness_list))
-    print("Delta-Greedy Filtered count:", len(filtered_delta_greedy_skill_results))
-    print("Delta-Greedy Unique archetypes in filtered results:", unique_archetypes)
+    print(f"Delta-Greedy (c={c}) variance: {delta_greedy_skill_variance}")
+    print(f"Delta-Greedy (c={c}) mean: {np.mean(delta_greedy_skill_fitness_list)}")
+    print(f"Delta-Greedy (c={c}) max: {np.max(delta_greedy_skill_fitness_list)}")
+    print(f"Delta-Greedy (c={c}) min: {np.min(delta_greedy_skill_fitness_list)}")
+    print(f"Delta-Greedy (c={c}) Filtered count: {len(filtered_delta_greedy_skill_results)}")
+    print(f"Delta-Greedy (c={c}) Unique archetypes in filtered results: {unique_archetypes}")
 
     # plt.hist(delta_greedy_skill_fitness_list, bins=50)
     # plt.title("Delta-Greedy Skill Fitness Distribution")

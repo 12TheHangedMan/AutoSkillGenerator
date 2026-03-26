@@ -15,7 +15,7 @@ def generate_delta_greedy_skill(
     skill_simulator: SkillSimulator,
     target_entries: list[Entry],
     c: float = 1.0,
-    samples_per_type: int = 2,
+    samples_per_type: int = 1,  # set 1 to remain fairness when compare with other algorithms
 ) -> Skill:
     entries = generate_delta_greedy_entries(
         modifier_space=modifier_space,
@@ -36,7 +36,7 @@ def generate_delta_greedy_entries(
     skill_simulator: SkillSimulator,
     target_entries: list[Entry],
     c: float = 1.0,
-    samples_per_type: int = 2,
+    samples_per_type: int = 1,
 ) -> list[Entry]:
     """
     Delta-greedy / soft-greedy generator.
@@ -64,7 +64,7 @@ def generate_delta_greedy_entries(
         for entry_type in min_skeleton
     ]
 
-    # same state representation as GA
+    # reading constraints for entries
     remaining_quota = {
         entry_type: rule["max"]
         for entry_type, rule in skeleton_constraints["constraints"].items()
@@ -91,8 +91,7 @@ def generate_delta_greedy_entries(
         )
 
         chosen_entry = select_entry_by_delta_greedy(
-            candidate_scored_entries=scored_candidate_entries,
-            c=c,
+            candidate_scored_entries=scored_candidate_entries, c=c, mode="top_k"
         )
 
         entries.append(chosen_entry)
@@ -157,9 +156,13 @@ def select_entry_by_delta_greedy(
         raise ValueError(f"Invalid mode '{mode}'. Must be one of {legal_modes}.")
 
     if mode == "top_k":
-        return select_entry_by_delta_greedy_top_k(candidate_scored_entries = candidate_scored_entries, c=c)
+        return select_entry_by_delta_greedy_top_k(
+            candidate_scored_entries=candidate_scored_entries, c=c
+        )
     elif mode == "score_threshold":
-        return select_entry_by_delta_greedy_score_threshold(candidate_scored_entries = candidate_scored_entries, c=c)
+        return select_entry_by_delta_greedy_score_threshold(
+            candidate_scored_entries=candidate_scored_entries, c=c
+        )
 
 
 def select_entry_by_delta_greedy_score_threshold(
@@ -203,7 +206,9 @@ def select_entry_by_delta_greedy_top_k(
     if not candidate_scored_entries:
         raise ValueError("No candidate entry")
 
-    sorted_candidates = sorted(candidate_scored_entries, key=lambda x: x[0], reverse=True)
+    sorted_candidates = sorted(
+        candidate_scored_entries, key=lambda x: x[0], reverse=True
+    )
     num_candidates = len(sorted_candidates)
 
     # Compute k: higher c -> smaller k (more greedy)

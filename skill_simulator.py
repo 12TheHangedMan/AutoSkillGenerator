@@ -14,6 +14,12 @@ class SkillSimulator:
         self.target_status = target_status.copy()
         self.total_rounds = total_rounds
 
+    def get_attacker_status(self):
+        return self.attacker_status
+
+    def get_target_status(self):
+        return self.target_status
+
     def simulate_skill(self, attacker_skill: Skill, target_skill: Skill) -> dict:
         result = self.simulate_with_entries(
             attacker_entries=attacker_skill.get_entries(),
@@ -137,4 +143,5 @@ class SkillSimulator:
             "dmg_made_per_round": dmg_made / total_rounds,
             "cost_per_round": total_cost / total_rounds,
             "fatigue_per_round": total_fatigue / total_rounds,
+            "target_hp": self.get_target_status()["base_hp"],
         }

@@ -7,13 +7,11 @@ def calculate_fitness(
     skill_simulator: SkillSimulator,
     attacker_skill: Skill,
     target_skill: Skill,
-    target_hp: int = config.TARGET_HP,
 ) -> float:
     return calculate_fitness_with_entries(
         skill_simulator=skill_simulator,
         attacker_skill_entries=attacker_skill.get_entries(),
         target_skill_entries=target_skill.get_entries(),
-        target_hp=target_hp,
     )
 
 
@@ -21,12 +19,13 @@ def calculate_fitness_with_entries(
     skill_simulator: SkillSimulator,
     attacker_skill_entries: list[Entry],
     target_skill_entries: list[Entry],
-    target_hp: int = config.TARGET_HP,
 ) -> float:
     result = skill_simulator.simulate_with_entries(
         attacker_entries=attacker_skill_entries,
         target_entries=target_skill_entries,
     )
+
+    target_hp = result["target_hp"]
 
     losses = calculate_loss_components_from_result(
         result=result,
@@ -38,7 +37,7 @@ def calculate_fitness_with_entries(
 
 def calculate_loss_components_from_result(
     result: dict,
-    target_hp: int = config.TARGET_HP,
+    target_hp: int,
 ) -> dict:
     total_dmg = result["total_dmg_made"]
     total_dmg_taken = result["total_dmg_taken"]
