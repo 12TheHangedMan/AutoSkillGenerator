@@ -14,6 +14,10 @@ from skill_simulator import SkillSimulator
 import numpy as np
 import matplotlib.pyplot as plt
 import random
+import pandas as pd
+import os
+
+all_results = []
 
 random.seed(config.SEED)
 np.random.seed(config.SEED)
@@ -115,6 +119,15 @@ def main():
     print("min:", np.min(np_pure_random_skill_fitness_list))
     print("Filtered count:", len(filtered_pure_random_skill_results))
     print("Unique archetypes in filtered results:", unique_archetypes)
+    
+    all_results.append({
+    "method": "pure_random",
+    "variance": pure_random_skill_variance,
+    "mean": np.mean(np_pure_random_skill_fitness_list),
+    "max": np.max(np_pure_random_skill_fitness_list),
+    "min": np.min(np_pure_random_skill_fitness_list),
+    "filtered_count": len(filtered_pure_random_skill_results),
+    })
 
     # fitness is negtive log (-fitness)
     log_pure_random_fitness = np.log10(-np_pure_random_skill_fitness_list + 1)
@@ -136,6 +149,15 @@ def main():
     )
     plt.legend()
     plt.show()
+    
+    # all_results.append({
+    # "method": "rule_based",
+    # "variance": best_rule_based_skill_variance,
+    # "mean": np.mean(np_best_rule_based_skill_fitness_list),
+    # "max": np.max(np_best_rule_based_skill_fitness_list),
+    # "min": np.min(np_best_rule_based_skill_fitness_list),
+    # "filtered_count": len(filtered_best_rule_based_skill_results),
+    # })
 
     # GA skill generation and evaluation
     ga_generated_skill_list_with_fitness = []
@@ -209,6 +231,15 @@ def main():
     )
     plt.legend()
     plt.show()
+    
+    all_results.append({
+    "method": "GA",
+    "variance": ga_skill_variance,
+    "mean": np.mean(ga_generated_skill_fitness_list),
+    "max": np.max(ga_generated_skill_fitness_list),
+    "min": np.min(ga_generated_skill_fitness_list),
+    "filtered_count": len(filtered_ga_skill_results),
+    })
 
     # proxy strong rule based skill generation and evaluation
     c = 0.75
@@ -273,6 +304,29 @@ def main():
         print(
             f"Rule-Guided Delta Greedy (c={c}) tier={fold} Unique archetypes in filtered results: {unique_archetypes}"
         )
+    
+        unique_archetypes = len(
+            set(s.archetype_id for _, s in filtered_delta_greedy_skills)
+        )
+        print(f"Delta-Greedy (c={c}) variance: {delta_greedy_skill_variance}")
+        print(f"Delta-Greedy (c={c}) mean: {np.mean(delta_greedy_skill_fitness_list)}")
+        print(f"Delta-Greedy (c={c}) max: {np.max(delta_greedy_skill_fitness_list)}")
+        print(f"Delta-Greedy (c={c}) min: {np.min(delta_greedy_skill_fitness_list)}")
+        print(
+            f"Delta-Greedy (c={c}) Filtered count: {len(filtered_delta_greedy_skills)}"
+        )
+        print(
+            f"Delta-Greedy (c={c}) Unique archetypes in filtered results: {unique_archetypes}"
+        )
+        
+        all_results.append({
+            "method": "delta_greedy",
+            "variance": delta_greedy_skill_variance,
+            "mean": np.mean(delta_greedy_skill_fitness_list),
+            "max": np.max(delta_greedy_skill_fitness_list),
+            "min": np.min(delta_greedy_skill_fitness_list),
+            "filtered_count": len(filtered_delta_greedy_skills),
+        })
 
         log_delta_greedy = np.log10(-np_delta_greedy_skill_fitness_list + 1)
         log_delta_greedy_all_tiers_fitness_list.append(log_delta_greedy)
@@ -321,6 +375,45 @@ def main():
 
     end_time = time.perf_counter()
     print(f"Total time: {end_time - start_time:.6f} seconds")
+    
+        # ========= SAVE CSV =========
+    df = pd.DataFrame(all_results)
+    df.to_csv("results_summary.csv", index=False)
+
+    print("\nSaved results_summary.csv")
+    print(df)
+
+    # Filtered count
+    pivot = df.set_index("method")["filtered_count"]
+
+    pivot.plot(kind="bar")
+    plt.title("Filtered Count Comparison")
+    plt.ylabel("Filtered Count")
+    plt.tight_layout()
+    plt.savefig("filtered_count.png")
+    plt.show()
+
+    # Mean（重要）
+    df["mean_abs"] = df["mean"].abs()
+
+    pivot = df.set_index("method")["mean_abs"]
+
+    pivot.plot(kind="bar")
+    plt.title("Mean (Closer to 0 is better)")
+    plt.yscale("log")
+    plt.tight_layout()
+    plt.savefig("mean.png")
+    plt.show()
+
+    # Variance
+    pivot = df.set_index("method")["variance"]
+
+    pivot.plot(kind="bar")
+    plt.title("Variance")
+    plt.yscale("log")
+    plt.tight_layout()
+    plt.savefig("variance.png")
+    plt.show()
 
 
 if __name__ == "__main__":
