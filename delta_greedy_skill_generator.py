@@ -58,9 +58,9 @@ def generate_delta_greedy_entries(
     min_skeleton = skill_builder.get_min_skeleton()
     max_slots = skeleton_constraints["max_slots"]
 
-    # required prefix
+    # building entries with min skeleton
     entries = [
-        generate_entry(modifier_space=modifier_space, entry_type=entry_type)
+        generate_entry(modifier_space=modifier_space, entry_type=entry_type, tier=4)
         for entry_type in min_skeleton
     ]
 
@@ -80,6 +80,8 @@ def generate_delta_greedy_entries(
             remaining_quota=remaining_quota,
         )
 
+    
+    # extending the entries
     while len(entries) < max_slots:
         scored_candidate_entries = collect_candidate_entries_with_fitness(
             current_entries=entries,

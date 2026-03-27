@@ -6,7 +6,7 @@ from models import Entry
 from skill_builder import SkillBuilder
 from skill_simulator import SkillSimulator
 from entry_generator import generate_entry
-from pure_random_skill_generator import generate_entries_from_skeleton
+from pure_random_skill_generator import generate_pure_random_entries
 from data_loader import load_data, load_json
 
 from fitness import calculate_fitness_with_entries
@@ -170,7 +170,7 @@ def initialize_population(
     population = []
 
     for _ in range(population_size):
-        entries = generate_entries_from_skeleton(
+        entries = generate_pure_random_entries(
             modifier_space, skeleton_constraints, skill_builder
         )
 

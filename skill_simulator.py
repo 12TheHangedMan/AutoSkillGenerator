@@ -144,4 +144,5 @@ class SkillSimulator:
             "cost_per_round": total_cost / total_rounds,
             "fatigue_per_round": total_fatigue / total_rounds,
             "target_hp": self.get_target_status()["base_hp"],
+            "attacker_hp": self.get_attacker_status()["base_hp"],
         }

@@ -7,14 +7,20 @@ import random
 def generate_pure_random_skill(
     modifier_space: dict, skeleton_constraints: dict, skill_builder: SkillBuilder
 ):
-    entries = generate_entries_from_skeleton(
+    entries = generate_pure_random_entries(
         modifier_space, skeleton_constraints, skill_builder
     )
 
     return skill_builder.build_skill(entries)
 
 
-def generate_entries_from_skeleton(
+def generate_pure_random_skill_from_entries(
+    entries: list[Entry], skill_builder: SkillBuilder
+):
+    return skill_builder.build_skill(entries)
+
+
+def generate_pure_random_entries(
     modifier_space: dict, skeleton_constraints: dict, skill_builder: SkillBuilder
 ) -> list[Entry]:
     min_skeleton = skill_builder.get_min_skeleton()
