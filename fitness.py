@@ -66,7 +66,7 @@ def calculate_loss_components_from_result(
 def aggregate_losses_to_fitness(losses: dict) -> float:
     total_loss = (
         losses["dmg_loss"] * 1.0
-        + (losses["cost_loss"] + losses["fatigue_loss"]) * 0.5
+        + (losses["cost_loss"] + losses["fatigue_loss"]) * 3.0
         + losses["dmg_taken_loss"]
     )
     return -total_loss * 1000

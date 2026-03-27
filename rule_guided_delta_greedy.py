@@ -1,4 +1,5 @@
 import random
+import config
 
 from models import Entry, Skill
 from skill_builder import SkillBuilder
@@ -14,8 +15,8 @@ def generate_delta_greedy_skill(
     skill_builder: SkillBuilder,
     skill_simulator: SkillSimulator,
     target_entries: list[Entry],
+    min_skeleton_tier: int,
     c: float = 1.0,
-    samples_per_type: int = 1,  # set 1 to remain fairness when compare with other algorithms
 ) -> Skill:
     entries = generate_delta_greedy_entries(
         modifier_space=modifier_space,
@@ -23,8 +24,8 @@ def generate_delta_greedy_skill(
         skill_builder=skill_builder,
         skill_simulator=skill_simulator,
         target_entries=target_entries,
+        min_skeleton_tier=min_skeleton_tier,
         c=c,
-        samples_per_type=samples_per_type,
     )
     return skill_builder.build_skill(entries)
 
@@ -35,20 +36,16 @@ def generate_delta_greedy_entries(
     skill_builder: SkillBuilder,
     skill_simulator: SkillSimulator,
     target_entries: list[Entry],
+    min_skeleton_tier: int,
     c: float = 1.0,
-    samples_per_type: int = 1,
 ) -> list[Entry]:
     """
-    Delta-greedy / soft-greedy generator.
-    c in [0, 1]:
-    Range-threshold selection.
+    Delta-greedy / soft-greedy generator on (entry_type, tier).
 
-    c = 1:
-        pure greedy
-    c < 1:
-        allow candidates within a relative band from best
-    c = 0:
-        pure random
+    c in [0, 1]:
+        c = 1: pure greedy over all candidate (entry_type, tier) pairs
+        c < 1: allow randomness among near-best candidates
+        c = 0: maximum randomness within legal candidate pool
     """
     if c < 0:
         c = 0.0
@@ -58,13 +55,16 @@ def generate_delta_greedy_entries(
     min_skeleton = skill_builder.get_min_skeleton()
     max_slots = skeleton_constraints["max_slots"]
 
-    # building entries with min skeleton
-    entries = [
-        generate_entry(modifier_space=modifier_space, entry_type=entry_type, tier=4)
+    # fixed rule-based prefix; currently tier 4 by design
+    entries: list[Entry] = [
+        generate_entry(
+            modifier_space=modifier_space,
+            entry_type=entry_type,
+            tier=min_skeleton_tier,
+        )
         for entry_type in min_skeleton
     ]
 
-    # reading constraints for entries
     remaining_quota = {
         entry_type: rule["max"]
         for entry_type, rule in skeleton_constraints["constraints"].items()
@@ -72,7 +72,6 @@ def generate_delta_greedy_entries(
 
     candidate_entry_types = set(modifier_space.keys())
 
-    # consume required prefix quotas
     for entry_type in min_skeleton:
         update_candidate_entry_types(
             entry_type=entry_type,
@@ -80,8 +79,6 @@ def generate_delta_greedy_entries(
             remaining_quota=remaining_quota,
         )
 
-    
-    # extending the entries
     while len(entries) < max_slots:
         scored_candidate_entries = collect_candidate_entries_with_fitness(
             current_entries=entries,
@@ -89,11 +86,12 @@ def generate_delta_greedy_entries(
             candidate_entry_types=candidate_entry_types,
             skill_simulator=skill_simulator,
             target_entries=target_entries,
-            samples_per_type=samples_per_type,
         )
 
         chosen_entry = select_entry_by_delta_greedy(
-            candidate_scored_entries=scored_candidate_entries, c=c, mode="top_k"
+            candidate_scored_entries=scored_candidate_entries,
+            c=c,
+            mode="top_k",
         )
 
         entries.append(chosen_entry)
@@ -113,11 +111,14 @@ def collect_candidate_entries_with_fitness(
     candidate_entry_types: set[str],
     skill_simulator: SkillSimulator,
     target_entries: list[Entry],
-    samples_per_type: int,
 ) -> list[tuple[float, Entry]]:
     """
-    Generate sampled candidates from currently valid entry types,
-    then score them using full simulator-based fitness.
+    Enumerate all legal candidate (entry_type, tier) combinations,
+    score each candidate using full simulator-based fitness,
+    and return scored candidate entries.
+
+    This makes delta-greedy operate on the structural tier layer,
+    instead of comparing only randomly sampled numeric instances.
     """
     if not candidate_entry_types:
         raise ValueError("No valid entry types available for delta greedy expansion.")
@@ -125,10 +126,11 @@ def collect_candidate_entries_with_fitness(
     scored_candidate_entries: list[tuple[float, Entry]] = []
 
     for entry_type in candidate_entry_types:
-        for _ in range(samples_per_type):
+        for tier in range(1, config.TOTAL_TIERS + 1):
             candidate_entry = generate_entry(
                 modifier_space=modifier_space,
                 entry_type=entry_type,
+                tier=tier,
             )
 
             trial_entries = current_entries + [candidate_entry]
@@ -145,12 +147,18 @@ def collect_candidate_entries_with_fitness(
 
 
 def select_entry_by_delta_greedy(
-    candidate_scored_entries: list[tuple[float, Entry]], c: float, mode: str = "top_k"
-):
+    candidate_scored_entries: list[tuple[float, Entry]],
+    c: float,
+    mode: str = "top_k",
+) -> Entry:
     """
     mode:
-    1. top_k: select the top k candidates and pick one from them. k is determined by c
-    2. score_threshold: select the top candidates above score_threshold and pick one from them. score_threshold is determined by c
+    1. top_k:
+        Select top-k candidates and randomly pick one.
+        k is determined by c.
+    2. score_threshold:
+        Select candidates above score threshold and randomly pick one.
+        Threshold is determined by c.
     """
     legal_modes = {"top_k", "score_threshold"}
 
@@ -159,12 +167,14 @@ def select_entry_by_delta_greedy(
 
     if mode == "top_k":
         return select_entry_by_delta_greedy_top_k(
-            candidate_scored_entries=candidate_scored_entries, c=c
+            candidate_scored_entries=candidate_scored_entries,
+            c=c,
         )
-    elif mode == "score_threshold":
-        return select_entry_by_delta_greedy_score_threshold(
-            candidate_scored_entries=candidate_scored_entries, c=c
-        )
+
+    return select_entry_by_delta_greedy_score_threshold(
+        candidate_scored_entries=candidate_scored_entries,
+        c=c,
+    )
 
 
 def select_entry_by_delta_greedy_score_threshold(
@@ -206,15 +216,16 @@ def select_entry_by_delta_greedy_top_k(
     c: float,
 ) -> Entry:
     if not candidate_scored_entries:
-        raise ValueError("No candidate entry")
+        raise ValueError("No candidate entry.")
 
     sorted_candidates = sorted(
-        candidate_scored_entries, key=lambda x: x[0], reverse=True
+        candidate_scored_entries,
+        key=lambda x: x[0],
+        reverse=True,
     )
     num_candidates = len(sorted_candidates)
 
-    # Compute k: higher c -> smaller k (more greedy)
     k = 1 + round((1 - c) * (num_candidates - 1))
-
     top_k_candidates = sorted_candidates[:k]
+
     return random.choice(top_k_candidates)[1]

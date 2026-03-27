@@ -7,7 +7,7 @@
         "base_defense": 100,
         "base_dodge": 25,
         "base_anti_critical": 75,
-        "base_hp": 1000
+        "base_hp": 500
     },
     "berserk_template": {
         "base_attack": 150,
@@ -17,7 +17,7 @@
         "base_defense": 50,
         "base_dodge": 10,
         "base_anti_critical": 50,
-        "base_hp": 1000
+        "base_hp": 500
     },
     "glass_cannon_template": {
         "base_attack": 200,
@@ -27,7 +27,7 @@
         "base_defense": 5,
         "base_dodge": 5,
         "base_anti_critical": 10,
-        "base_hp": 1000
+        "base_hp": 500
     },
     "tank_template": {
         "base_attack": 50,
@@ -37,7 +37,7 @@
         "base_defense": 200,
         "base_dodge": 25,
         "base_anti_critical": 100,
-        "base_hp": 2000
+        "base_hp": 1500
     },
     "elite_template": {
         "base_attack": 120,
