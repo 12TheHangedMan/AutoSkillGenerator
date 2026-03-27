@@ -26,9 +26,11 @@ def calculate_fitness_with_entries(
     )
 
     target_hp = result["target_hp"]
+    attacker_hp = result["attacker_hp"]
 
     losses = calculate_loss_components_from_result(
         result=result,
+        attacker_hp=attacker_hp,
         target_hp=target_hp,
     )
 
@@ -37,6 +39,7 @@ def calculate_fitness_with_entries(
 
 def calculate_loss_components_from_result(
     result: dict,
+    attacker_hp: int,
     target_hp: int,
 ) -> dict:
     total_dmg = result["total_dmg_made"]
@@ -50,7 +53,7 @@ def calculate_loss_components_from_result(
     dmg_loss = calculate_dmg_loss(total_dmg, target_hp)
     cost_loss = calculate_cost_loss(total_cost, total_dmg)
     fatigue_loss = calculate_fatigue_loss(total_fatigue, total_dmg)
-    dmg_taken_loss = calculate_dmg_taken_loss(total_dmg_taken, total_dmg, target_hp)
+    dmg_taken_loss = calculate_dmg_taken_loss(total_dmg_taken, total_dmg, attacker_hp, target_hp)
 
     return {
         "dmg_loss": dmg_loss,
@@ -82,6 +85,6 @@ def calculate_fatigue_loss(total_fatigue: float, total_dmg: float) -> float:
 
 
 def calculate_dmg_taken_loss(
-    total_dmg_taken: float, total_dmg: float, target_hp: int
+    total_dmg_taken: float, total_dmg: float, attacker_hp: int, target_hp: int
 ) -> float:
-    return total_dmg_taken / total_dmg
+    return total_dmg_taken * target_hp / (total_dmg * attacker_hp)
