@@ -119,23 +119,21 @@ def main():
     print("min:", np.min(np_pure_random_skill_fitness_list))
     print("Filtered count:", len(filtered_pure_random_skill_results))
     print("Unique archetypes in filtered results:", unique_archetypes)
-    
-    all_results.append({
-    "method": "pure_random",
-    "variance": pure_random_skill_variance,
-    "mean": np.mean(np_pure_random_skill_fitness_list),
-    "max": np.max(np_pure_random_skill_fitness_list),
-    "min": np.min(np_pure_random_skill_fitness_list),
-    "filtered_count": len(filtered_pure_random_skill_results),
-    })
+
+    all_results.append(
+        {
+            "method": "RDM",
+            "variance": pure_random_skill_variance,
+            "mean": np.mean(np_pure_random_skill_fitness_list),
+            "median": np.median(np_pure_random_skill_fitness_list),
+            "max": np.max(np_pure_random_skill_fitness_list),
+            "min": np.min(np_pure_random_skill_fitness_list),
+            "filtered_count": len(filtered_pure_random_skill_results),
+        }
+    )
 
     # fitness is negtive log (-fitness)
     log_pure_random_fitness = np.log10(-np_pure_random_skill_fitness_list + 1)
-
-    # plt.boxplot(log_pure_random_fitness, tick_labels=["Pure-random"])
-    # plt.title("Log-scaled Loss Pure Random")
-    # plt.ylabel("Log-scaled Loss")
-    # plt.show()
 
     plt.hist(log_pure_random_fitness, bins=50)
     plt.title("Log-scaled Loss Pure Random")
@@ -149,15 +147,6 @@ def main():
     )
     plt.legend()
     plt.show()
-    
-    # all_results.append({
-    # "method": "rule_based",
-    # "variance": best_rule_based_skill_variance,
-    # "mean": np.mean(np_best_rule_based_skill_fitness_list),
-    # "max": np.max(np_best_rule_based_skill_fitness_list),
-    # "min": np.min(np_best_rule_based_skill_fitness_list),
-    # "filtered_count": len(filtered_best_rule_based_skill_results),
-    # })
 
     # GA skill generation and evaluation
     ga_generated_skill_list_with_fitness = []
@@ -207,17 +196,13 @@ def main():
 
     print("GA variance:", ga_skill_variance)
     print("GA mean:", np.mean(ga_generated_skill_fitness_list))
+
     print("GA max:", np.max(ga_generated_skill_fitness_list))
     print("GA min:", np.min(ga_generated_skill_fitness_list))
     print("GA Filtered count:", len(filtered_ga_skill_results))
     print("GA Unique archetypes in filtered results:", unique_archetypes)
 
     log_ga_fitness = np.log10(-np_ga_fitness + 1)
-
-    # plt.boxplot(log_ga_fitness, tick_labels=["GA"])
-    # plt.title("Log-scaled Loss GA")
-    # plt.ylabel("Log-scaled Loss")
-    # plt.show()
 
     plt.hist(log_ga_fitness, bins=50)
     plt.title("Log-scaled Loss GA")
@@ -231,15 +216,18 @@ def main():
     )
     plt.legend()
     plt.show()
-    
-    all_results.append({
-    "method": "GA",
-    "variance": ga_skill_variance,
-    "mean": np.mean(ga_generated_skill_fitness_list),
-    "max": np.max(ga_generated_skill_fitness_list),
-    "min": np.min(ga_generated_skill_fitness_list),
-    "filtered_count": len(filtered_ga_skill_results),
-    })
+
+    all_results.append(
+        {
+            "method": "GA",
+            "variance": ga_skill_variance,
+            "mean": np.mean(ga_generated_skill_fitness_list),
+            "median": np.median(ga_generated_skill_fitness_list),
+            "max": np.max(ga_generated_skill_fitness_list),
+            "min": np.min(ga_generated_skill_fitness_list),
+            "filtered_count": len(filtered_ga_skill_results),
+        }
+    )
 
     # proxy strong rule based skill generation and evaluation
     c = 0.75
@@ -304,37 +292,25 @@ def main():
         print(
             f"Rule-Guided Delta Greedy (c={c}) tier={fold} Unique archetypes in filtered results: {unique_archetypes}"
         )
-    
+
         unique_archetypes = len(
             set(s.archetype_id for _, s in filtered_delta_greedy_skills)
         )
-        print(f"Delta-Greedy (c={c}) variance: {delta_greedy_skill_variance}")
-        print(f"Delta-Greedy (c={c}) mean: {np.mean(delta_greedy_skill_fitness_list)}")
-        print(f"Delta-Greedy (c={c}) max: {np.max(delta_greedy_skill_fitness_list)}")
-        print(f"Delta-Greedy (c={c}) min: {np.min(delta_greedy_skill_fitness_list)}")
-        print(
-            f"Delta-Greedy (c={c}) Filtered count: {len(filtered_delta_greedy_skills)}"
+
+        all_results.append(
+            {
+                "method": f"RGDG T{fold}",
+                "variance": delta_greedy_skill_variance,
+                "mean": np.mean(delta_greedy_skill_fitness_list),
+                "median": np.median(delta_greedy_skill_fitness_list),
+                "max": np.max(delta_greedy_skill_fitness_list),
+                "min": np.min(delta_greedy_skill_fitness_list),
+                "filtered_count": len(filtered_delta_greedy_skills),
+            }
         )
-        print(
-            f"Delta-Greedy (c={c}) Unique archetypes in filtered results: {unique_archetypes}"
-        )
-        
-        all_results.append({
-            "method": "delta_greedy",
-            "variance": delta_greedy_skill_variance,
-            "mean": np.mean(delta_greedy_skill_fitness_list),
-            "max": np.max(delta_greedy_skill_fitness_list),
-            "min": np.min(delta_greedy_skill_fitness_list),
-            "filtered_count": len(filtered_delta_greedy_skills),
-        })
 
         log_delta_greedy = np.log10(-np_delta_greedy_skill_fitness_list + 1)
         log_delta_greedy_all_tiers_fitness_list.append(log_delta_greedy)
-
-        # plt.boxplot(log_delta_greedy, tick_labels=["delta_greedy"])
-        # plt.title("Log-scaled Loss Delta-Greedy")
-        # plt.ylabel("Log-scaled Loss")
-        # plt.show()
 
         plt.hist(log_delta_greedy, bins=50)
         plt.title(f"Log-scaled Loss Rule-Guided Delta Greedy Tier {fold}")
@@ -375,8 +351,8 @@ def main():
 
     end_time = time.perf_counter()
     print(f"Total time: {end_time - start_time:.6f} seconds")
-    
-        # ========= SAVE CSV =========
+
+    # ========= SAVE CSV =========
     df = pd.DataFrame(all_results)
     df.to_csv("results_summary.csv", index=False)
 
@@ -393,9 +369,8 @@ def main():
     plt.savefig("filtered_count.png")
     plt.show()
 
-    # Mean（重要）
+    # Mean
     df["mean_abs"] = df["mean"].abs()
-
     pivot = df.set_index("method")["mean_abs"]
 
     pivot.plot(kind="bar")
@@ -403,6 +378,17 @@ def main():
     plt.yscale("log")
     plt.tight_layout()
     plt.savefig("mean.png")
+    plt.show()
+
+    # Median
+    df["median_abs"] = df["median"].abs()
+    pivot = df.set_index("method")["median_abs"]
+
+    pivot.plot(kind="bar")
+    plt.title("Median (Closer to 0 is better)")
+    plt.yscale("log")
+    plt.tight_layout()
+    plt.savefig("median.png")
     plt.show()
 
     # Variance
