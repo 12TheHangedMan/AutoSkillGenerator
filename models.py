@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 import hashlib
 import config
+import numpy as np
 
 @dataclass(frozen=True)
 class Entry:
@@ -16,10 +17,12 @@ class Skill:
 
     archetype_id: str = field(init=False)
     aggregated_params: dict[str, int] = field(init=False)
+    # vector: list=field(init=False)
 
     def __post_init__(self):
         object.__setattr__(self, "aggregated_params", aggregate_entries(self.entries))
         object.__setattr__(self, "archetype_id", self._build_archetype_id())
+        # object.__setattr__(self, "vector", self._to_type_tier_vector(self.entries, 4))
 
     def _build_archetype_signature(self) -> str:
         """
@@ -41,6 +44,53 @@ class Skill:
     def _build_archetype_id(self) -> str:
         signature = self._build_archetype_signature()
         return hashlib.sha1(signature.encode()).hexdigest()[:12]
+    
+    def build_type_tier_vector(
+        self,
+        modifier_order: list[str],
+        total_tiers: int,
+    ) -> np.ndarray:
+        """
+        Build a vector where each (entry_type, tier) pair occupies one dimension.
+
+        Layout:
+        [type1_t1, type1_t2, ..., type1_tN,
+         type2_t1, type2_t2, ..., type2_tN,
+         ...]
+
+        Each position stores the count of entries of that (entry_type, tier).
+        """
+        vector = np.zeros(len(modifier_order) * total_tiers, dtype=int)
+        type_to_idx = {entry_type: _ for _, entry_type in enumerate(modifier_order)}
+
+        for entry in self.entries:
+            entry_type = entry.entry_type
+            tier = entry.tier
+
+            base_idx = type_to_idx[entry_type] * total_tiers
+            vector_idx = base_idx + (tier - 1)
+            vector[vector_idx] += 1
+
+        return vector
+    
+    def build_type_tier_sum_vector(
+        self,
+        modifier_order: list[str],
+    ) -> np.ndarray:
+        """
+        Build a vector where each entry_type occupies one dimension.
+        The value of each dimension is the sum of tiers of that entry_type.
+        """
+        vector = np.zeros(len(modifier_order), dtype=int)
+        type_to_idx = {entry_type: i for i, entry_type in enumerate(modifier_order)}
+
+        for entry in self.entries:
+            entry_type = entry.entry_type
+            tier = entry.tier
+
+            vector[type_to_idx[entry_type]] += tier
+
+        return vector
 
     def get_param(self, key: str, default: int = 0) -> int:
         return self.aggregated_params.get(key, default)

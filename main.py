@@ -5,6 +5,7 @@ from pure_random_skill_generator import (
     generate_pure_random_skill_from_entries,
     generate_pure_random_entries,
 )
+from models import Skill
 from rule_guided_delta_greedy import generate_delta_greedy_skill
 from ga_skill_generator import generate_ga_skill
 import config
@@ -13,6 +14,7 @@ from fitness import calculate_fitness
 from skill_simulator import SkillSimulator
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.cluster.hierarchy import linkage, dendrogram
 import random
 import pandas as pd
 import os
@@ -27,6 +29,8 @@ FILTER_FITNESS_THRESHOLD = -200
 
 def main():
     start_time = time.perf_counter()
+
+    sequence = []
 
     base_character_status_templates, modifier_space, skeleton_constraints = load_data()
 
@@ -59,6 +63,18 @@ def main():
     base_character_status_boss_template = base_character_status_templates[
         "boss_template"
     ]
+
+    template_sequence = [
+        base_character_status_basic_template,
+        base_character_status_berserk_template,
+        base_character_status_glass_cannon_template,
+        base_character_status_tank_template,
+        base_character_status_elite_template,
+        base_character_status_boss_template,
+    ]
+
+    # for template in template_sequence:
+    #     target_base_character_status = template
 
     target_base_character_status = base_character_status_glass_cannon_template
 
@@ -148,6 +164,26 @@ def main():
     plt.legend()
     plt.show()
 
+    # clustering dendrogram
+    top200_skills_with_fitness: list[tuple[float, Skill]] = filter_top_k_skills(
+        pure_random_results
+    )
+    clustering = []
+    modifier_order = list(modifier_space.keys())
+    for f, s in top200_skills_with_fitness:
+        clustering.append(s.build_type_tier_sum_vector(modifier_order))
+
+    X = np.array(clustering)
+
+    Z = linkage(X, method="ward")
+
+    plt.figure(figsize=(12, 6))
+    dendrogram(Z)
+    plt.title(f"Hierarchical Clustering Dendrogram RDM")
+    plt.xlabel("Skill Index")
+    plt.ylabel("Distance")
+    plt.show()
+
     # GA skill generation and evaluation
     ga_generated_skill_list_with_fitness = []
 
@@ -168,6 +204,7 @@ def main():
     ga_generated_skill_fitness_list = [
         f for f, _ in ga_generated_skill_list_with_fitness
     ]
+
     np_ga_fitness = np.array(ga_generated_skill_fitness_list)
 
     ga_skill_variance = np.var(ga_generated_skill_fitness_list)
@@ -217,6 +254,26 @@ def main():
     plt.legend()
     plt.show()
 
+    # clustering dendrogram
+    top200_skills_with_fitness: list[tuple[float, Skill]] = filter_top_k_skills(
+        ga_generated_skill_list_with_fitness
+    )
+    clustering = []
+    modifier_order = list(modifier_space.keys())
+    for f, s in top200_skills_with_fitness:
+        clustering.append(s.build_type_tier_sum_vector(modifier_order))
+
+    X = np.array(clustering)
+
+    Z = linkage(X, method="ward")
+
+    plt.figure(figsize=(12, 6))
+    dendrogram(Z)
+    plt.title(f"Hierarchical Clustering Dendrogram GA")
+    plt.xlabel("Skill Index")
+    plt.ylabel("Distance")
+    plt.show()
+
     all_results.append(
         {
             "method": "GA",
@@ -230,7 +287,7 @@ def main():
     )
 
     # proxy strong rule based skill generation and evaluation
-    c = 0.75
+    c = 1
 
     fold_range = range(1, config.TOTAL_TIERS + 1)
     log_delta_greedy_all_tiers_fitness_list = []
@@ -325,6 +382,26 @@ def main():
         plt.legend()
         plt.show()
 
+        # clustering dendrogram
+        top200_skills_with_fitness: list[tuple[float, Skill]] = filter_top_k_skills(
+            delta_greedy_skill_with_fitness_list
+        )
+        clustering = []
+        modifier_order = list(modifier_space.keys())
+        for f, s in top200_skills_with_fitness:
+            clustering.append(s.build_type_tier_sum_vector(modifier_order))
+
+        X = np.array(clustering)
+
+        Z = linkage(X, method="ward")
+
+        plt.figure(figsize=(12, 6))
+        dendrogram(Z)
+        plt.title(f"Hierarchical Clustering Dendrogram RGDG T{fold}")
+        plt.xlabel("Skill Index")
+        plt.ylabel("Distance")
+        plt.show()
+
     data = [log_pure_random_fitness]
     data.extend(log_delta_greedy_all_tiers_fitness_list)
     data.append(log_ga_fitness)
@@ -400,6 +477,19 @@ def main():
     plt.tight_layout()
     plt.savefig("variance.png")
     plt.show()
+
+
+def filter_top_k_skills(skill_list: list[tuple[float, Skill]], k: int = 200):
+    unique_skills_with_fitness = {}
+    for f, s in skill_list:
+        if s.archetype_id not in unique_skills_with_fitness:
+            unique_skills_with_fitness[s.archetype_id] = (f, s)
+
+    sorted_unique_skills_with_fitness = sorted(
+        list(unique_skills_with_fitness.values()), key=lambda x: x[0], reverse=True
+    )
+
+    return sorted_unique_skills_with_fitness[:k]
 
 
 if __name__ == "__main__":
