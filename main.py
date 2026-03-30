@@ -30,6 +30,8 @@ FILTER_FITNESS_THRESHOLD = -200
 def main():
     start_time = time.perf_counter()
 
+    sequence = []
+
     base_character_status_templates, modifier_space, skeleton_constraints = load_data()
 
     # 1
@@ -61,6 +63,18 @@ def main():
     base_character_status_boss_template = base_character_status_templates[
         "boss_template"
     ]
+
+    template_sequence = [
+        base_character_status_basic_template,
+        base_character_status_berserk_template,
+        base_character_status_glass_cannon_template,
+        base_character_status_tank_template,
+        base_character_status_elite_template,
+        base_character_status_boss_template,
+    ]
+
+    # for template in template_sequence:
+    #     target_base_character_status = template
 
     target_base_character_status = base_character_status_glass_cannon_template
 
@@ -273,7 +287,7 @@ def main():
     )
 
     # proxy strong rule based skill generation and evaluation
-    c = 0.75
+    c = 1
 
     fold_range = range(1, config.TOTAL_TIERS + 1)
     log_delta_greedy_all_tiers_fitness_list = []
