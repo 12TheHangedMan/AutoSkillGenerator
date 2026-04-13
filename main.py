@@ -76,7 +76,7 @@ def main():
     # for template in template_sequence:
     #     target_base_character_status = template
 
-    target_base_character_status = base_character_status_glass_cannon_template
+    target_base_character_status = base_character_status_boss_template
 
     skill_builder = SkillBuilder(modifier_space, skeleton_constraints)
 
@@ -93,7 +93,7 @@ def main():
 
     # generate random entries pool
     entries_pool = []
-    for _ in range(config.SAMPLES_PER_FOLD * 10):
+    for _ in range(config.SAMPLES_PER_FOLD):
         entries = generate_pure_random_entries(
             modifier_space, skeleton_constraints, skill_builder
         )
@@ -101,7 +101,7 @@ def main():
 
     random.shuffle(entries_pool)
 
-    pure_random_samples = random.sample(entries_pool, config.SAMPLES_PER_FOLD)
+    pure_random_samples = entries_pool # random.sample(entries_pool, config.GA_POPULATION_SIZE)
 
     # pure random skill evaluation and metrics
     for entries in pure_random_samples:
@@ -187,8 +187,8 @@ def main():
     # GA skill generation and evaluation
     ga_generated_skill_list_with_fitness = []
 
-    for i in range(0, len(entries_pool), config.SAMPLES_PER_FOLD):
-        population = entries_pool[i : i + config.SAMPLES_PER_FOLD]
+    for i in range(0, len(entries_pool), config.GA_POPULATION_SIZE):
+        population = entries_pool[i : i + config.GA_POPULATION_SIZE]
 
         ga_result = generate_ga_skill(
             modifier_space=modifier_space,

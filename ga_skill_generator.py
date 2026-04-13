@@ -266,7 +266,6 @@ def repair_entries(
     skeleton_constraints: dict,
     skill_builder: SkillBuilder,
 ) -> list[Entry]:
-    # constraints: dict = copy.deepcopy(skeleton_constraints["constraints"])
     remaining_quota = {
         entry_type: rule["max"]
         for entry_type, rule in skeleton_constraints["constraints"].items()
