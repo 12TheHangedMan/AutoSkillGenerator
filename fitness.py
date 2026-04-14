@@ -1,6 +1,6 @@
-import config
 from models import Skill, Entry
 from skill_simulator import SkillSimulator
+import config
 
 
 def calculate_fitness(
@@ -73,15 +73,15 @@ def aggregate_losses_to_fitness(losses: dict) -> float:
 
 
 def calculate_dmg_loss(total_dmg: float, target_hp: int) -> float:
-    return (1 - target_hp / total_dmg) ** 2
+    return (1 - target_hp / (total_dmg * config.TARGET_ROUNDS + 1e-6)) ** 2
 
 
 def calculate_cost_loss(total_cost: float, total_dmg: float) -> float:
-    return (1 - total_dmg / (total_cost * 1 + 1e-6)) ** 2
+    return (1 - total_dmg / (total_cost * config.TARGET_DMG_COST_RATIO  + 1e-6)) ** 2
 
 
 def calculate_fatigue_loss(total_fatigue: float, total_dmg: float) -> float:
-    return (1 - total_dmg / (total_fatigue * 1 + 1e-6)) ** 2
+    return (1 - total_dmg / (total_fatigue * config.TARGET_DMG_FATIGUE_RATIO + 1e-6)) ** 2
 
 
 def calculate_dmg_taken_loss(
