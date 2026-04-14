@@ -30,8 +30,6 @@ FILTER_FITNESS_THRESHOLD = -200
 def main():
     start_time = time.perf_counter()
 
-    sequence = []
-
     base_character_status_templates, modifier_space, skeleton_constraints = load_data()
 
     # 1
@@ -101,7 +99,7 @@ def main():
 
     random.shuffle(entries_pool)
 
-    pure_random_samples = entries_pool # random.sample(entries_pool, config.GA_POPULATION_SIZE)
+    pure_random_samples = entries_pool
 
     # pure random skill evaluation and metrics
     for entries in pure_random_samples:
@@ -119,17 +117,21 @@ def main():
 
     pure_random_skill_fitness_list = [f for f, _ in pure_random_results]
     pure_random_skill_list = [s for _, s in pure_random_results]
-    pure_random_skill_variance = np.var(pure_random_skill_fitness_list)
+    pure_random_skill_std = np.std(pure_random_skill_fitness_list)
     filtered_pure_random_skill_results = [
         (f, s) for f, s in pure_random_results if f > FILTER_FITNESS_THRESHOLD
     ]
+
     unique_archetypes = len(
         set(s.archetype_id for _, s in filtered_pure_random_skill_results)
     )
 
     np_pure_random_skill_fitness_list = np.array(pure_random_skill_fitness_list)
 
-    print("pure_random_skill_variance:", pure_random_skill_variance)
+    # fitness is negtive log (-fitness)
+    log_pure_random_fitness = np.log10(-np_pure_random_skill_fitness_list + 1)
+
+    print("pure_random_skill_std:", pure_random_skill_std)
     print("mean:", np.mean(np_pure_random_skill_fitness_list))
     print("max:", np.max(np_pure_random_skill_fitness_list))
     print("min:", np.min(np_pure_random_skill_fitness_list))
@@ -139,17 +141,15 @@ def main():
     all_results.append(
         {
             "method": "RDM",
-            "variance": pure_random_skill_variance,
+            "standard deviation": pure_random_skill_std,
             "mean": np.mean(np_pure_random_skill_fitness_list),
             "median": np.median(np_pure_random_skill_fitness_list),
             "max": np.max(np_pure_random_skill_fitness_list),
             "min": np.min(np_pure_random_skill_fitness_list),
-            "filtered_count": len(filtered_pure_random_skill_results),
+            "filtered count": len(filtered_pure_random_skill_results),
+            "unique filtered count": unique_archetypes,
         }
     )
-
-    # fitness is negtive log (-fitness)
-    log_pure_random_fitness = np.log10(-np_pure_random_skill_fitness_list + 1)
 
     plt.hist(log_pure_random_fitness, bins=50)
     plt.title("Log-scaled Loss Pure Random")
@@ -207,7 +207,7 @@ def main():
 
     np_ga_fitness = np.array(ga_generated_skill_fitness_list)
 
-    ga_skill_variance = np.var(ga_generated_skill_fitness_list)
+    ga_skill_std = np.std(ga_generated_skill_fitness_list)
 
     filtered_ga_skill_results = [
         (f, s)
@@ -231,7 +231,7 @@ def main():
     for f, s in top_10:
         print(f"skill: {s.get_params()}")
 
-    print("GA variance:", ga_skill_variance)
+    print("GA std:", ga_skill_std)
     print("GA mean:", np.mean(ga_generated_skill_fitness_list))
 
     print("GA max:", np.max(ga_generated_skill_fitness_list))
@@ -277,12 +277,13 @@ def main():
     all_results.append(
         {
             "method": "GA",
-            "variance": ga_skill_variance,
+            "standard deviation": ga_skill_std,
             "mean": np.mean(ga_generated_skill_fitness_list),
             "median": np.median(ga_generated_skill_fitness_list),
             "max": np.max(ga_generated_skill_fitness_list),
             "min": np.min(ga_generated_skill_fitness_list),
-            "filtered_count": len(filtered_ga_skill_results),
+            "filtered count": len(filtered_ga_skill_results),
+            "unique filtered count": unique_archetypes,
         }
     )
 
@@ -313,7 +314,7 @@ def main():
 
         np_delta_greedy_skill_fitness_list = np.array(delta_greedy_skill_fitness_list)
 
-        delta_greedy_skill_variance = np.var(np_delta_greedy_skill_fitness_list)
+        delta_greedy_skill_std = np.std(np_delta_greedy_skill_fitness_list)
         filtered_delta_greedy_skills = [
             (f, s)
             for f, s in delta_greedy_skill_with_fitness_list
@@ -332,7 +333,7 @@ def main():
         )
 
         print(
-            f"Rule-Guided Delta Greedy (c={c}) tier={fold} variance: {delta_greedy_skill_variance}"
+            f"Rule-Guided Delta Greedy (c={c}) tier={fold} std: {delta_greedy_skill_std}"
         )
         print(
             f"Rule-Guided Delta Greedy (c={c}) tier={fold} mean: {np.mean(delta_greedy_skill_fitness_list)}"
@@ -357,12 +358,13 @@ def main():
         all_results.append(
             {
                 "method": f"RGDG T{fold}",
-                "variance": delta_greedy_skill_variance,
+                "standard deviation": delta_greedy_skill_std,
                 "mean": np.mean(delta_greedy_skill_fitness_list),
                 "median": np.median(delta_greedy_skill_fitness_list),
                 "max": np.max(delta_greedy_skill_fitness_list),
                 "min": np.min(delta_greedy_skill_fitness_list),
-                "filtered_count": len(filtered_delta_greedy_skills),
+                "filtered count": len(filtered_delta_greedy_skills),
+                "unique filtered count": unique_archetypes,
             }
         )
 
@@ -437,7 +439,7 @@ def main():
     print(df)
 
     # Filtered count
-    pivot = df.set_index("method")["filtered_count"]
+    pivot = df.set_index("method")["filtered count"]
 
     pivot.plot(kind="bar")
     plt.title("Filtered Count Comparison")
@@ -469,13 +471,13 @@ def main():
     plt.show()
 
     # Variance
-    pivot = df.set_index("method")["variance"]
+    pivot = df.set_index("method")["standard deviation"]
 
     pivot.plot(kind="bar")
-    plt.title("Variance")
+    plt.title("Standard deviation")
     plt.yscale("log")
     plt.tight_layout()
-    plt.savefig("variance.png")
+    plt.savefig("std.png")
     plt.show()
 
 
