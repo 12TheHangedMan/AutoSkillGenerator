@@ -1,5 +1,4 @@
 from utility import *
-import time
 from skill_builder import SkillBuilder
 from pure_random_skill_generator import (
     generate_pure_random_skill_from_entries,
@@ -17,6 +16,7 @@ import matplotlib.pyplot as plt
 from scipy.cluster.hierarchy import linkage, dendrogram
 import random
 import pandas as pd
+import sys
 import os
 
 all_results = []
@@ -28,53 +28,44 @@ FILTER_FITNESS_THRESHOLD = -200
 
 
 def main():
-    start_time = time.perf_counter()
-
     base_character_status_templates, modifier_space, skeleton_constraints = load_data()
 
-    # 1
+    template_names = [
+        "basic_template",  # 1
+        "berserk_template",  # 2
+        "glass_cannon_template",  # 3
+        "tank_template",  # 4
+        "elite_template",  # 5
+        "boss_template",  # 6
+    ]
+
+    template_sequence = []
+
+    for name in template_names:
+        template_sequence.append(base_character_status_templates[name])
+
     base_character_status_basic_template = base_character_status_templates[
         "basic_template"
     ]
 
-    # 2
-    base_character_status_berserk_template = base_character_status_templates[
-        "berserk_template"
-    ]
+    template_idx = random.randint(0, len(template_sequence))
 
-    # 3
-    base_character_status_glass_cannon_template = base_character_status_templates[
-        "glass_cannon_template"
-    ]
+    # take args
+    args = sys.argv
+    if len(args) >= 2:
+        idx = int(args[1])
+    
+        if idx > 0 and idx < len(template_sequence) + 1:
+            template_idx = idx - 1
+        else:
+            print("Invalid template_idx, randomly testing template")
+    else:   
+        print("Missing template_idx, randomly testing template.")
 
-    # 4
-    base_character_status_tank_template = base_character_status_templates[
-        "tank_template"
-    ]
+    target_base_character_status = template_sequence[template_idx]
+    template_name = template_names[template_idx]
 
-    # 5
-    base_character_status_elite_template = base_character_status_templates[
-        "elite_template"
-    ]
-
-    # 6
-    base_character_status_boss_template = base_character_status_templates[
-        "boss_template"
-    ]
-
-    template_sequence = [
-        base_character_status_basic_template,
-        base_character_status_berserk_template,
-        base_character_status_glass_cannon_template,
-        base_character_status_tank_template,
-        base_character_status_elite_template,
-        base_character_status_boss_template,
-    ]
-
-    # for template in template_sequence:
-    #     target_base_character_status = template
-
-    target_base_character_status = base_character_status_boss_template
+    print(f"\nNow testing {template_name}!\n")
 
     skill_builder = SkillBuilder(modifier_space, skeleton_constraints)
 
@@ -86,8 +77,6 @@ def main():
         base_character_status_basic_template, target_base_character_status, 4
     )
     pure_random_results = []
-
-    start_time = time.perf_counter()
 
     # generate random entries pool
     entries_pool = []
@@ -111,9 +100,10 @@ def main():
 
     top10 = sorted(pure_random_results, key=lambda x: x[0], reverse=True)[:10]
 
-    for f, s in top10:
-        print(f)
-        print(s.get_params())
+    print("Top 10 skills from Random Generation:")
+    for _, s in top10:
+        # print(f)
+        print(f"{s.get_params()}")
 
     pure_random_skill_fitness_list = [f for f, _ in pure_random_results]
     pure_random_skill_list = [s for _, s in pure_random_results]
@@ -228,6 +218,7 @@ def main():
 
     top_10 = sorted(unique_list, key=lambda x: x[0], reverse=True)[:10]
 
+    print("\nTop 10 skills from Genetic Algorithm:")
     for f, s in top_10:
         print(f"skill: {s.get_params()}")
 
@@ -321,10 +312,18 @@ def main():
             if f > FILTER_FITNESS_THRESHOLD
         ]
 
-        top_10 = sorted(filtered_delta_greedy_skills, key=lambda x: x[0], reverse=True)[
-            :10
-        ]
+        best_by_archetype = {}
 
+        for f, s in delta_greedy_skill_with_fitness_list:
+            key = s.archetype_id
+            if key not in best_by_archetype or f > best_by_archetype[key][0]:
+                best_by_archetype[key] = (f, s)
+
+        unique_list = list(best_by_archetype.values())
+
+        top_10 = sorted(unique_list, key=lambda x: x[0], reverse=True)[:10]
+
+        print(f"\nTop 10 skills from Rule-guide Delta Greedy Tier{fold}:")
         for f, s in top_10:
             print(f"skill: {s.get_params()}")
 
@@ -428,12 +427,9 @@ def main():
     plt.legend()
     plt.show()
 
-    end_time = time.perf_counter()
-    print(f"Total time: {end_time - start_time:.6f} seconds")
-
     # ========= SAVE CSV =========
     df = pd.DataFrame(all_results)
-    df.to_csv("results_summary.csv", index=False)
+    # df.to_csv("results_summary.csv", index=False)
 
     print("\nSaved results_summary.csv")
     print(df)
@@ -445,7 +441,7 @@ def main():
     plt.title("Filtered Count Comparison")
     plt.ylabel("Filtered Count")
     plt.tight_layout()
-    plt.savefig("filtered_count.png")
+    # plt.savefig("filtered_count.png")
     plt.show()
 
     # Mean
@@ -456,7 +452,7 @@ def main():
     plt.title("Mean (Closer to 0 is better)")
     plt.yscale("log")
     plt.tight_layout()
-    plt.savefig("mean.png")
+    # plt.savefig("mean.png")
     plt.show()
 
     # Median
@@ -467,7 +463,7 @@ def main():
     plt.title("Median (Closer to 0 is better)")
     plt.yscale("log")
     plt.tight_layout()
-    plt.savefig("median.png")
+    # plt.savefig("median.png")
     plt.show()
 
     # Variance
@@ -477,8 +473,10 @@ def main():
     plt.title("Standard deviation")
     plt.yscale("log")
     plt.tight_layout()
-    plt.savefig("std.png")
+    # plt.savefig("std.png")
     plt.show()
+
+    print(f"\nDone testing {template_name}!")
 
 
 def filter_top_k_skills(skill_list: list[tuple[float, Skill]], k: int = 200):
